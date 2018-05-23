@@ -440,13 +440,20 @@
   #include "pins_THE_BORG.h"          // STM32F7                                    env:STM32F7
 #elif MB(REMRAM_V1)
   #include "pins_REMRAM_V1.h"         // STM32F7                                    env:STM32F7xx
-
+  
 //
 // Espressif ESP32
 //
 
 #elif MB(ESP32)
   #include "pins_ESP32.h"
+
+//
+// x86 Native Debug board
+//
+
+#elif MB(LINUX_X86_64)
+  #include "pins_RAMPS_X86.h"         // x86 Debug Build
 
 #else
   #error "Unknown MOTHERBOARD value set in Configuration.h"
