@@ -146,4 +146,7 @@ using FilteredADC = LPC176x::ADC<ADC_LOWPASS_K_VALUE, ADC_MEDIAN_FILTER_SIZE>;
 #define HAL_READ_ADC()         FilteredADC::get_result()
 #define HAL_ADC_READY()        FilteredADC::finished_conversion()
 
+// Parse a G-code word into a pin index
+int16_t PARSED_PIN_INDEX(const char code, const int16_t dval);
+
 #endif // _HAL_LPC1768_H_
