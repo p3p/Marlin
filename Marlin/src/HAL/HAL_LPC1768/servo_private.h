@@ -53,7 +53,7 @@
 #include <LPC1768_Servo.h>
 
 class MarlinServo: public Servo  {
-  void Servo::move(const int value) {
+  void move(const int value) {
     constexpr uint16_t servo_delay[] = SERVO_DELAY;
     static_assert(COUNT(servo_delay) == NUM_SERVOS, "SERVO_DELAY must be an array NUM_SERVOS long.");
     if (this->attach(0) >= 0) {    // notice the pin number is zero here

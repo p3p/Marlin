@@ -73,7 +73,7 @@
   #include "../HAL_TEENSY35_36/HAL_Servo_Teensy.h" // Teensy HAL uses an inherited library
 
 #elif defined(TARGET_LPC1768)
-  #include "../HAL_LPC1768/LPC1768_Servo.h"
+  #include "../HAL_LPC1768/servo_private.h"
 #elif defined(STM32F1) || defined(STM32F1xx)
   #include "../HAL_STM32F1/HAL_Servo_STM32F1.h"
 #elif defined(STM32F4) || defined(STM32F4xx)
