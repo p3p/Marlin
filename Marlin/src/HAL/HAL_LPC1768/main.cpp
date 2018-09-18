@@ -9,7 +9,9 @@
 #include <usb/cdcuser.h>
 #include <usb/mscuser.h>
 #include <CDCSerial.h>
-
+extern "C" {
+  #include <debug_frmwrk.h>
+}
 #include "../../inc/MarlinConfig.h"
 #include "HAL.h"
 #include "HAL_timers.h"
@@ -41,15 +43,28 @@ void HAL_init() {
       delay(100);
     }
   #endif
-
-  (void)MSC_SD_Init(0);
-
-  USB_Init();
-  USB_Connect(TRUE);
-
+  //debug_frmwrk_init();
+  //_DBG("\n\nDebug running\n");
+  // Initialise the SD card chip select pins as soon as possible
+  #ifdef SS_PIN
+    digitalWrite(SS_PIN, HIGH);
+    pinMode(SS_PIN, OUTPUT);
+  #endif
+  #ifdef ONBOARD_SD_CS
+    digitalWrite(ONBOARD_SD_CS, HIGH);
+    pinMode(ONBOARD_SD_CS, OUTPUT);
+  #endif
+  USB_Init();                               // USB Initialization
+  USB_Connect(TRUE);                        // USB Connect
+  #ifdef USB_SD_ACCESS
+    #if USB_SD_ACCESS != USB_SD_DISABLED
+      MSC_SD_Init(0);                       // Enable USB SD card access
+    #endif
+  #endif
   const uint32_t usb_timeout = millis() + 2000;
   while (!USB_Configuration && PENDING(millis(), usb_timeout)) {
     delay(50);
+    HAL_idletask();
     #if PIN_EXISTS(LED)
       TOGGLE(LED_PIN);     // Flash quickly during USB initialization
     #endif

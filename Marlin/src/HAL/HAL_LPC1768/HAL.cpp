@@ -23,7 +23,8 @@
 #include "../../inc/MarlinConfig.h"
 #include "../shared/Delay.h"
 #include "../../../gcode/parser.h"
-
+#include "../../sd/cardreader.h"
+#include <usb/mscuser.h>
 // U8glib required functions
 extern "C" void u8g_xMicroDelay(uint16_t val) {
   DELAY_US(val);
@@ -55,6 +56,25 @@ int16_t PARSED_PIN_INDEX(const char code, const int16_t dval) {
   const  int16_t ind = (port < (NUM_DIGITAL_PINS >> 5) && (pin < 32))
                       ? GET_PIN_MAP_INDEX(port << 5 | pin) : -2;
   return ind > -2 ? ind : dval;
+}
+
+// HAL idle task
+void HAL_idletask(void) {
+  #if ENABLED(SHARED_SD_CARD)
+    // If Marlin is using the SD card we need to lock it to prevent access from
+    // a PC via USB.
+    // Other HALs use IS_SD_PRINTING and IS_SD_FILE_OPEN to check for access but
+    // this will not reliably detect delete operations. To be safe we will lock
+    // the disk if Marlin has it mounted. Unfortuately there is currently no way
+    // to unmount the disk from the LCD menu.
+    // if (IS_SD_PRINTING || IS_SD_FILE_OPEN)
+    if (card.cardOK)
+      MSC_Aquire_Lock();
+    else
+      MSC_Release_Lock();
+  #endif
+  // Perform USB stack housekeeping
+  MSC_RunDeferredCommands();
 }
 
 #endif // TARGET_LPC1768
