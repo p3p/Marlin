@@ -130,7 +130,7 @@
     #if (SCK_PIN == P0_07 && MISO_PIN == P0_08 && MOSI_PIN == P0_09)
       #define LPC_HW_SPI_DEV 1
     #else
-      #if (SCK_PIN == P0_15 && MISO_PIN == P0_16 && MOSI_PIN == P0_17)
+      #if (SCK_PIN == P0_15 && MISO_PIN == P0_17 && MOSI_PIN == P0_18)
         #define LPC_HW_SPI_DEV 0
       #else
         #error "Invalid pins selected for hardware SPI"
