@@ -38,8 +38,8 @@ HAL_TEMP_TIMER_ISR;
 Timer timers[2];
 
 void HAL_timer_init(void) {
-  timers[0].init(0, HAL_STEPPER_TIMER_RATE, TIMER0_IRQHandler);
-  timers[1].init(1, HAL_TEMP_TIMER_RATE, TIMER1_IRQHandler);
+  timers[0].init(0, STEPPER_TIMER_RATE, TIMER0_IRQHandler);
+  timers[1].init(1, TEMP_TIMER_RATE, TIMER1_IRQHandler);
 }
 
 void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {

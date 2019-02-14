@@ -31,7 +31,7 @@ extern void loop();
 #include "../../inc/MarlinConfig.h"
 #include <stdio.h>
 #include <stdarg.h>
-#include "../Delay.h"
+#include "../shared/Delay.h"
 #include "hardware/IOLoggerCSV.h"
 #include "hardware/Heater.h"
 #include "hardware/LinearAxis.h"

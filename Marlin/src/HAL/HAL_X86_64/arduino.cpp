@@ -25,7 +25,7 @@
 #include <iostream>
 #include "../../inc/MarlinConfig.h"
 #include "hardware/Clock.h"
-#include "../Delay.h"
+#include "../shared/Delay.h"
 
 // Interrupts
 void cli(void) { } // Disable

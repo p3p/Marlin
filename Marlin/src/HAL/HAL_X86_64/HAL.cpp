@@ -23,7 +23,7 @@
 #ifdef __PLAT_X86_64__
 
 #include "../../inc/MarlinConfig.h"
-#include "../Delay.h"
+#include "../shared/Delay.h"
 
 HalSerial usb_serial;
 
