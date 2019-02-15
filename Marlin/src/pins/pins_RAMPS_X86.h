@@ -86,30 +86,30 @@
 //
 // Steppers
 //
-#define X_STEP_PIN         54
-#define X_DIR_PIN          55
-#define X_ENABLE_PIN       38
+#define X_STEP_PIN         2
+#define X_DIR_PIN          3
+#define X_ENABLE_PIN       4
 #ifndef X_CS_PIN
   #define X_CS_PIN         53
 #endif
 
-#define Y_STEP_PIN         60
-#define Y_DIR_PIN          61
-#define Y_ENABLE_PIN       56
+#define Y_STEP_PIN         17
+#define Y_DIR_PIN          27
+#define Y_ENABLE_PIN       22
 #ifndef Y_CS_PIN
   #define Y_CS_PIN         49
 #endif
 
-#define Z_STEP_PIN         46
-#define Z_DIR_PIN          48
-#define Z_ENABLE_PIN       62
+#define Z_STEP_PIN         10
+#define Z_DIR_PIN          9
+#define Z_ENABLE_PIN       11
 #ifndef Z_CS_PIN
   #define Z_CS_PIN         40
 #endif
 
-#define E0_STEP_PIN        26
-#define E0_DIR_PIN         28
-#define E0_ENABLE_PIN      24
+#define E0_STEP_PIN        5
+#define E0_DIR_PIN         6
+#define E0_ENABLE_PIN      13
 #ifndef E0_CS_PIN
   #define E0_CS_PIN        42
 #endif
@@ -189,9 +189,9 @@
 //
 // Temperature Sensors
 //
-#define TEMP_0_PIN         0   // Analog Input
-#define TEMP_1_PIN         1   // Analog Input
-#define TEMP_BED_PIN       2   // Analog Input
+#define TEMP_0_PIN         16   // Analog Input
+#define TEMP_1_PIN         20   // Analog Input
+#define TEMP_BED_PIN       21   // Analog Input
 
 // SPI for Max6675 or Max31855 Thermocouple
 #if DISABLED(SDSUPPORT)
@@ -224,13 +224,13 @@
   #define MOSFET_D_PIN  -1
 #endif
 #ifndef RAMPS_D8_PIN
-  #define RAMPS_D8_PIN   8
+  #define RAMPS_D8_PIN   25
 #endif
 #ifndef RAMPS_D9_PIN
-  #define RAMPS_D9_PIN   9
+  #define RAMPS_D9_PIN   8
 #endif
 #ifndef RAMPS_D10_PIN
-  #define RAMPS_D10_PIN 10
+  #define RAMPS_D10_PIN 7
 #endif
 
 #define HEATER_0_PIN     RAMPS_D10_PIN
@@ -260,14 +260,14 @@
 #endif
 
 #ifndef FAN_PIN
-  #define FAN_PIN           4   // IO pin. Buffer needed
+  #define FAN_PIN           12   // IO pin. Buffer needed
 #endif
 
 //
 // Misc. Functions
 //
 #define SDSS               53
-#define LED_PIN            13
+#define LED_PIN            23
 
 #ifndef FILWIDTH_PIN
   #define FILWIDTH_PIN      5   // Analog Input on AUX2
@@ -279,7 +279,7 @@
 #endif
 
 #ifndef PS_ON_PIN
-  #define PS_ON_PIN        12
+  #define PS_ON_PIN        24
 #endif
 
 #if ENABLED(CASE_LIGHT_ENABLE) && !defined(CASE_LIGHT_PIN) && !defined(SPINDLE_LASER_ENABLE_PIN)

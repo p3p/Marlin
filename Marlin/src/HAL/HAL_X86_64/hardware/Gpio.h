@@ -25,7 +25,7 @@
 #include "../../../inc/MarlinConfigPre.h"
 #include <stdint.h>
 
-typedef int16_t pin_type;
+typedef int8_t pin_type;
 
 struct GpioEvent {
   enum Type {
@@ -67,75 +67,156 @@ struct pin_data {
   Peripheral* cb;
 };
 
-class Gpio {
-public:
+#ifdef __USE_RPI_GPIO__
+  #include "rpi_gpio.h"
 
-  static const pin_type pin_count = 255;
-  static pin_data pin_map[pin_count+1];
+  class Gpio {
+  public:
+    static const pin_type pin_count = 27;
+    static pin_data pin_map[pin_count+1];
 
-  static bool valid_pin(pin_type pin) {
-    return pin >= 0 && pin <= pin_count;
-  }
-
-  static void set(pin_type pin) {
-    set(pin, 1);
-  }
-
-  static void set(pin_type pin, uint16_t value) {
-    if (!valid_pin(pin)) return;
-    GpioEvent::Type evt_type = value > 1 ? GpioEvent::SET_VALUE : value > pin_map[pin].value ? GpioEvent::RISE : value < pin_map[pin].value ? GpioEvent::FALL : GpioEvent::NOP;
-    pin_map[pin].value = value;
-    GpioEvent evt(Clock::nanos(), pin, evt_type);
-    if (pin_map[pin].cb != nullptr) {
-      pin_map[pin].cb->interrupt(evt);
+    static constexpr bool valid_pin(const pin_type pin) {
+      return pin > 1 && pin <= pin_count;
     }
-    if (Gpio::logger != nullptr) Gpio::logger->log(evt);
-  }
 
-  static uint16_t get(pin_type pin) {
-    if (!valid_pin(pin)) return 0;
-    return pin_map[pin].value;
-  }
+    static void set(const pin_type pin) {
+      set(pin, 1);
+    }
 
-  static void clear(pin_type pin) {
-    set(pin, 0);
-  }
+    static void set(const pin_type pin, const uint16_t value) {
+      if (!valid_pin(pin)) return;
+      if (value) GPIO_SET = 1 << pin;
+      else GPIO_CLR = 1 << pin;
+    }
 
-  static void setMode(pin_type pin, uint8_t value) {
-    if (!valid_pin(pin)) return;
-    pin_map[pin].mode = value;
-    GpioEvent evt(Clock::nanos(), pin, GpioEvent::Type::SETM);
-    if (pin_map[pin].cb != nullptr) pin_map[pin].cb->interrupt(evt);
-    if (Gpio::logger != nullptr) Gpio::logger->log(evt);
-  }
+    static uint16_t get(const pin_type pin) {
+      if (!valid_pin(pin)) return 0;
+      return GET_GPIO(pin);
+    }
 
-  static uint8_t getMode(pin_type pin) {
-    if (!valid_pin(pin)) return 0;
-    return pin_map[pin].mode;
-  }
+    static void clear(const pin_type pin) {
+      if (!valid_pin(pin)) return;
+      GPIO_CLR = 1 << pin;
+    }
 
-  static void setDir(pin_type pin, uint8_t value) {
-    if (!valid_pin(pin)) return;
-    pin_map[pin].dir = value;
-    GpioEvent evt(Clock::nanos(), pin, GpioEvent::Type::SETD);
-    if (pin_map[pin].cb != nullptr) pin_map[pin].cb->interrupt(evt);
-    if (Gpio::logger != nullptr) Gpio::logger->log(evt);
-  }
+    static void setMode(const pin_type pin, uint8_t value) {
+      if (!valid_pin(pin)) return;
+      if (value == 2) {
+        GPIO_PULL = 2;
+      } else if (value == 3) {
+        GPIO_PULL = 1;
+      } else {
+        GPIO_PULL = 0;
+      }
+      GPIO_PULLCLK0 = 1 << pin;
+      Clock::delayMicros(5);
+      GPIO_PULL = 0;
+      GPIO_PULLCLK0 = 0;
+    }
 
-  static uint8_t getDir(pin_type pin) {
-    if (!valid_pin(pin)) return 0;
-    return pin_map[pin].dir;
-  }
+    static uint8_t getMode(const pin_type pin) {
+      if (!valid_pin(pin)) return 0;
+      return 0;
+    }
 
-  static void attachPeripheral(pin_type pin, Peripheral* per) {
-    if (!valid_pin(pin)) return;
-    pin_map[pin].cb = per;
-  }
+    static void setDir(const pin_type pin, uint8_t value) {
+      if (!valid_pin(pin)) return;
+      if (value) {
+        INP_GPIO(pin); // important
+        OUT_GPIO(pin);
+      } else
+        INP_GPIO(pin);
+    }
 
-  static void attachLogger(IOLogger* logger) {
-    Gpio::logger = logger;
-  }
+    static uint8_t getDir(const pin_type pin) {
+      if (!valid_pin(pin)) return 0;
+      return 0;
+    }
 
-private:
-  static IOLogger* logger;
-};
+    static void attachPeripheral(const pin_type pin, Peripheral* per) {
+    }
+
+    static void attachLogger(IOLogger* logger) {
+      Gpio::logger = logger;
+    }
+
+  private:
+    static IOLogger* logger;
+  };
+
+#elif
+
+  class Gpio {
+  public:
+
+    static const pin_type pin_count = 255;
+    static pin_data pin_map[pin_count+1];
+
+    static constexpr bool valid_pin(const pin_type pin) {
+      return pin >= 0 && pin <= pin_count;
+    }
+
+    static void set(const pin_type pin) {
+      set(pin, 1);
+    }
+
+    static void set(const pin_type pin, const uint16_t value) {
+      if (!valid_pin(pin)) return;
+      GpioEvent::Type evt_type = value > 1 ? GpioEvent::SET_VALUE : value > pin_map[pin].value ? GpioEvent::RISE : value < pin_map[pin].value ? GpioEvent::FALL : GpioEvent::NOP;
+      pin_map[pin].value = value;
+      GpioEvent evt(Clock::nanos(), pin, evt_type);
+      if (pin_map[pin].cb != nullptr) {
+        pin_map[pin].cb->interrupt(evt);
+      }
+      if (Gpio::logger != nullptr) Gpio::logger->log(evt);
+    }
+
+    static uint16_t get(const pin_type pin) {
+      if (!valid_pin(pin)) return 0;
+      return pin_map[pin].value;
+    }
+
+    static void clear(const pin_type pin) {
+      set(pin, 0);
+    }
+
+    static void setMode(const pin_type pin, const uint8_t value) {
+      if (!valid_pin(pin)) return;
+      pin_map[pin].mode = value;
+      GpioEvent evt(Clock::nanos(), pin, GpioEvent::Type::SETM);
+      if (pin_map[pin].cb != nullptr) pin_map[pin].cb->interrupt(evt);
+      if (Gpio::logger != nullptr) Gpio::logger->log(evt);
+    }
+
+    static uint8_t getMode(const pin_type pin) {
+      if (!valid_pin(pin)) return 0;
+      return pin_map[pin].mode;
+    }
+
+    static void setDir(const pin_type pin, const uint8_t value) {
+      if (!valid_pin(pin)) return;
+      pin_map[pin].dir = value;
+      GpioEvent evt(Clock::nanos(), pin, GpioEvent::Type::SETD);
+      if (pin_map[pin].cb != nullptr) pin_map[pin].cb->interrupt(evt);
+      if (Gpio::logger != nullptr) Gpio::logger->log(evt);
+    }
+
+    static uint8_t getDir(const pin_type pin) {
+      if (!valid_pin(pin)) return 0;
+      return pin_map[pin].dir;
+    }
+
+    static void attachPeripheral(const pin_type pin, Peripheral* per) {
+      if (!valid_pin(pin)) return;
+      pin_map[pin].cb = per;
+    }
+
+    static void attachLogger(IOLogger* logger) {
+      Gpio::logger = logger;
+    }
+
+  private:
+    static IOLogger* logger;
+  };
+
+#endif

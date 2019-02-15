@@ -36,6 +36,8 @@ extern void loop();
 #include "hardware/Heater.h"
 #include "hardware/LinearAxis.h"
 
+#include "hardware/rpi_gpio.h"
+
 // simple stdout / stdin implementation for fake serial port
 void write_serial_thread() {
   for (;;) {
@@ -119,8 +121,11 @@ int main(void) {
 
   HAL_timer_init();
 
-  std::thread simulation (simulation_loop);
-
+  #ifdef __USE_RPI_GPIO__
+    setup_gpio();
+  #elif
+    std::thread simulation (simulation_loop);
+  #endif
   DELAY_US(10000);
 
   setup();
@@ -128,8 +133,9 @@ int main(void) {
     loop();
     std::this_thread::yield();
   }
-
-  simulation.join();
+  #ifndef __USE_RPI_GPIO__
+    simulation.join();
+  #endif
   write_serial.join();
   read_serial.join();
 }
