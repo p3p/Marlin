@@ -29,7 +29,8 @@
 #include "../shared/persistent_store_api.h"
 #include <stdio.h>
 
-uint8_t buffer[E2END];
+constexpr uint32_t eeprom_size = 4096;
+uint8_t buffer[eeprom_size];
 char filename[] = "eeprom.dat";
 
 bool PersistentStore::access_start() {
@@ -40,8 +41,8 @@ bool PersistentStore::access_start() {
   fseek(eeprom_file, 0L, SEEK_END);
   std::size_t file_size = ftell(eeprom_file);
 
-  if (file_size < E2END) {
-    memset(buffer + file_size, eeprom_erase_value, E2END - file_size);
+  if (file_size < eeprom_size) {
+    memset(buffer + file_size, eeprom_erase_value, eeprom_size - file_size);
   }
   else {
     fseek(eeprom_file, 0L, SEEK_SET);
@@ -95,7 +96,7 @@ bool PersistentStore::read_data(int &pos, uint8_t* value, const size_t size, uin
   return bytes_read != size;  // return true for any error
 }
 
-size_t PersistentStore::capacity() { return 4096; } // 4KiB of Emulated EEPROM
+size_t PersistentStore::capacity() { return eeprom_size; } // 4KiB of Emulated EEPROM
 
 #endif // EEPROM_SETTINGS
 #endif // __PLAT_X86_64__

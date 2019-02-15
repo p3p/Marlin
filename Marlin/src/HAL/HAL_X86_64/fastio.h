@@ -30,8 +30,8 @@
 
 #define USEABLE_HARDWARE_PWM(pin) false
 
-#define SET_DIR_INPUT(IO)   Gpio::setDir(IO, 1)
-#define SET_DIR_OUTPUT(IO)  Gpio::setDir(IO, 0)
+#define SET_DIR_INPUT(IO)   Gpio::setDir(IO, INPUT)
+#define SET_DIR_OUTPUT(IO)  Gpio::setDir(IO, OUTPUT)
 
 #define SET_MODE(IO, mode)  Gpio::setMode(IO, mode)
 
