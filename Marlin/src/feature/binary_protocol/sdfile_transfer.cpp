@@ -16,21 +16,22 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
-#include "../inc/MarlinConfigPre.h"
+#include "../../inc/MarlinConfigPre.h"
 
 #if ENABLED(BINARY_FILE_TRANSFER)
 
-#include "../sd/cardreader.h"
-#include "binary_stream.h"
+#include "../../sd/cardreader.h"
+#include "sdfile_transfer.h"
 
 char* SDFileTransferProtocol::Packet::Open::data = nullptr;
 size_t SDFileTransferProtocol::data_waiting, SDFileTransferProtocol::transfer_timeout, SDFileTransferProtocol::idle_timeout;
 bool SDFileTransferProtocol::transfer_active, SDFileTransferProtocol::dummy_transfer, SDFileTransferProtocol::compression;
 
-BinaryStream binaryStream[NUM_SERIAL];
-
-#endif
+SDFileTransferProtocol::Packet::ActionResponse SDFileTransferProtocol::response_data{};
+BinaryStream::PacketInfo SDFileTransferProtocol::tx_packet{};
+SDFileTransferProtocol::Packet::QueryResponse SDFileTransferProtocol::query_data{};
+#endif // BINARY_FILE_TRANSFER

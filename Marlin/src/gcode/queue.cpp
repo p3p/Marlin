@@ -45,7 +45,7 @@ GCodeQueue queue;
 #endif
 
 #if ENABLED(BINARY_FILE_TRANSFER)
-  #include "../feature/binary_stream.h"
+  #include "../feature/binary_protocol/transport_layer.h"
 #endif
 
 #if ENABLED(POWER_LOSS_RECOVERY)
@@ -446,7 +446,7 @@ void GCodeQueue::get_serial_commands() {
        * receive buffer (which limits the packet size to MAX_CMD_SIZE).
        * The receive buffer also limits the packet size for reliable transmission.
        */
-      binaryStream[card.transfer_port_index].receive(serial_line_buffer[card.transfer_port_index]);
+      binaryStream[card.transfer_port_index].receive();//serial_line_buffer[card.transfer_port_index]);
       return;
     }
   #endif
