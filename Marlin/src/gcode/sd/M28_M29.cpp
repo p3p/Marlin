@@ -24,6 +24,10 @@
 
 #if ENABLED(SDSUPPORT)
 
+#if ENABLED(BINARY_FILE_TRANSFER)
+  #include "../../feature/binary_protocol/transport_layer.h"
+#endif
+
 #include "../gcode.h"
 #include "../../sd/cardreader.h"
 
@@ -46,10 +50,15 @@ void GcodeSuite::M28() {
       while (*p == ' ') ++p;
     }
 
-    // Binary transfer mode
-    if ((card.flag.binary_mode = binary_mode)) {
+    // Enable binary protocol on this serial port
+    // todo: asign an specific gcode for this? it still almost makes sense here
+    if (binary_mode) {
       SERIAL_ECHO_MSG("Switching to Binary Protocol");
-      TERN_(HAS_MULTI_SERIAL, card.transfer_port_index = queue.port[queue.index_r]);
+      #if HAS_MULTI_SERIAL
+        BinaryStream::enable(queue.port[queue.index_r]);
+      #else
+        BinaryStream::enable(0);
+      #endif
     }
     else
       card.openFileWrite(p);

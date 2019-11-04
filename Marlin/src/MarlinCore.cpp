@@ -95,6 +95,14 @@
   #include "feature/direct_stepping.h"
 #endif
 
+#if ENABLED(BINARY_FILE_TRANSFER)
+  #include "feature/binary_protocol/transport_layer.h"
+#endif
+
+#if ENABLED(TOUCH_BUTTONS)
+  #include "feature/touch/xpt2046.h"
+#endif
+
 #if ENABLED(HOST_ACTION_COMMANDS)
   #include "feature/host_actions.h"
 #endif
@@ -667,6 +675,12 @@ void idle(TERN_(ADVANCED_PAUSE_FEATURE, bool no_stepper_sleep/*=false*/)) {
 
   // Handle USB Flash Drive insert / remove
   TERN_(USB_FLASH_DRIVE_SUPPORT, Sd2Card::idle());
+
+  #if ENABLED(BINARY_FILE_TRANSFER)
+    BinaryStream::update();
+  #endif
+
+  ui.update();
 
   // Announce Host Keepalive state (if any)
   TERN_(HOST_KEEPALIVE_FEATURE, gcode.host_keepalive());

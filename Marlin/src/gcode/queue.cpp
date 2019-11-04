@@ -318,28 +318,51 @@ void GCodeQueue::flush_and_request_resend() {
   ok_to_send();
 }
 
-inline bool serial_data_available() {
-  byte data_available = 0;
-  if (MYSERIAL0.available()) data_available++;
-  #ifdef SERIAL_PORT_2
-    const bool port2_open = TERN1(HAS_ETHERNET, ethernet.have_telnet_client);
-    if (port2_open && MYSERIAL1.available()) data_available++;
-  #endif
-  return data_available > 0;
-}
 
-inline int read_serial(const uint8_t index) {
-  switch (index) {
-    case 0: return MYSERIAL0.read();
-    case 1: {
+#if ENABLED(BINARY_FILE_TRANSFER)
+  // todo: redirect to the binarystream gcode stream protocol
+  inline bool serial_data_available() {
+    return false
+      || (MYSERIAL0.available() && !BinaryStream::enabled(0))
       #if HAS_MULTI_SERIAL
-        const bool port2_open = TERN1(HAS_ETHERNET, ethernet.have_telnet_client);
-        if (port2_open) return MYSERIAL1.read();
+        || (MYSERIAL1.available() && !BinaryStream::enabled(1)
       #endif
-    }
-    default: return -1;
+    ;
   }
-}
+
+  inline int read_serial(const uint8_t index) {
+    switch (index) {
+      case 0: return BinaryStream::enabled(index) ? -1 : MYSERIAL0.read();
+      #if HAS_MULTI_SERIAL
+        case 1: return BinaryStream::enabled(index) ? -1 : MYSERIAL1.read();
+      #endif
+      default: return -1;
+    }
+  }
+#else
+  inline bool serial_data_available() {
+    byte data_available = 0;
+    if (MYSERIAL0.available()) data_available++;
+    #ifdef SERIAL_PORT_2
+      const bool port2_open = TERN1(HAS_ETHERNET, ethernet.have_telnet_client);
+      if (port2_open && MYSERIAL1.available()) data_available++;
+    #endif
+    return data_available > 0;
+  }
+
+  inline int read_serial(const uint8_t index) {
+    switch (index) {
+      case 0: return MYSERIAL0.read();
+      case 1: {
+        #if HAS_MULTI_SERIAL
+          const bool port2_open = TERN1(HAS_ETHERNET, ethernet.have_telnet_client);
+          if (port2_open) return MYSERIAL1.read();
+        #endif
+      }
+      default: return -1;
+    }
+  }
+#endif
 
 void GCodeQueue::gcode_line_error(PGM_P const err, const int8_t pn) {
   PORT_REDIRECT(pn);                      // Reply to the serial port that sent the command
@@ -438,18 +461,6 @@ void GCodeQueue::get_serial_commands() {
   static char serial_line_buffer[NUM_SERIAL][MAX_CMD_SIZE];
 
   static uint8_t serial_input_state[NUM_SERIAL] = { PS_NORMAL };
-
-  #if ENABLED(BINARY_FILE_TRANSFER)
-    if (card.flag.binary_mode) {
-      /**
-       * For binary stream file transfer, use serial_line_buffer as the working
-       * receive buffer (which limits the packet size to MAX_CMD_SIZE).
-       * The receive buffer also limits the packet size for reliable transmission.
-       */
-      binaryStream[card.transfer_port_index].receive();//serial_line_buffer[card.transfer_port_index]);
-      return;
-    }
-  #endif
 
   // If the command buffer is empty for too long,
   // send "wait" to indicate Marlin is still waiting.

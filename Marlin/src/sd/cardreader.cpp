@@ -64,10 +64,6 @@ char CardReader::filename[FILENAME_LENGTH], CardReader::longFilename[LONG_FILENA
 
 IF_DISABLED(NO_SD_AUTOSTART, uint8_t CardReader::autofile_index); // = 0
 
-#if BOTH(HAS_MULTI_SERIAL, BINARY_FILE_TRANSFER)
-  int8_t CardReader::transfer_port_index;
-#endif
-
 // private:
 
 SdFile CardReader::root, CardReader::workDir, CardReader::workDirParents[MAX_DIR_DEPTH];
