@@ -28,10 +28,14 @@
 #include "sdfile_transfer.h"
 
 char* SDFileTransferProtocol::Packet::Open::data = nullptr;
-size_t SDFileTransferProtocol::data_waiting, SDFileTransferProtocol::transfer_timeout, SDFileTransferProtocol::idle_timeout;
-bool SDFileTransferProtocol::transfer_active, SDFileTransferProtocol::dummy_transfer, SDFileTransferProtocol::compression;
+char* SDFileTransferProtocol::Packet::FileCmd::data = nullptr;
+char* SDFileTransferProtocol::Packet::File::data = nullptr;
 
-SDFileTransferProtocol::Packet::ActionResponse SDFileTransferProtocol::response_data{};
-BinaryStream::PacketInfo SDFileTransferProtocol::tx_packet{};
-SDFileTransferProtocol::Packet::QueryResponse SDFileTransferProtocol::query_data{};
+size_t SDFileTransferProtocol::data_waiting, SDFileTransferProtocol::data_transfered, SDFileTransferProtocol::transfer_timeout;
+uint8_t SDFileTransferProtocol::queued_state = SDFileTransferProtocol::ProtocolState::IDLE, SDFileTransferProtocol::protocol_state = SDFileTransferProtocol::ProtocolState::IDLE;
+bool SDFileTransferProtocol::dummy_transfer, SDFileTransferProtocol::compression;
+char SDFileTransferProtocol::tx_buffer[SDFileTransferProtocol_BLOCK_SIZE+16]{}; //todo: optimise allocation
+
+SdFile SDFileTransferProtocol::root, SDFileTransferProtocol::file;
+
 #endif // BINARY_FILE_TRANSFER

@@ -32,42 +32,84 @@
 #endif
 #include "../../sd/cardreader.h"
 
+const uint16_t SDFileTransferProtocol_BLOCK_SIZE = 64;
+
+#define sd_busy() (IS_SD_PRINTING() || IS_SD_FILE_OPEN())
+
 class SDFileTransferProtocol  {
 private:
   struct Packet {
+
     struct [[gnu::packed]] Open {
       static bool validate(char* buffer, size_t length) {
         return (length > sizeof(Open) && buffer[length - 1] == '\0');
       }
       static Open& decode(char* buffer) {
-        data = &buffer[2];
+        data = &buffer[sizeof(Open)];
         return *reinterpret_cast<Open*>(buffer);
       }
       bool compression_enabled() { return compression & 0x1; }
       bool dummy_transfer() { return dummy & 0x1; }
       static char* filename() { return data; }
-      private:
-        uint8_t dummy, compression;
-        static char* data;  // variable length strings complicate things
+      uint8_t dummy = 0, compression = 0;
+      static char* data;
     };
+
+    struct [[gnu::packed]] File {
+      enum Meta : uint8_t {FOLDER, FILE, EOL};
+      static bool validate(char* buffer, size_t length) {
+        return (length > sizeof(File) && buffer[length - 1] == '\0');
+      }
+      static File& decode(char* buffer) {
+        data = &buffer[sizeof(File)];
+        return *reinterpret_cast<File*>(buffer);
+      }
+      uint8_t file_id() { return index; }
+      uint8_t meta() { return meta_data; }
+      static char* filename() { return data; }
+      uint8_t index = 0, meta_data = 0;
+      uint32_t size;
+      static char* data;
+    };
+
+    struct [[gnu::packed]] FileCmd {
+      enum FileCmdType : uint8_t {CD, DELETE, MKDIR, RMDIR};
+      static bool validate(char* buffer, size_t length) {
+        return (length > sizeof(FileCmd) && buffer[length - 1] == '\0');
+      }
+      static FileCmd& decode(char* buffer) {
+        data = &buffer[sizeof(FileCmd)];
+        return *reinterpret_cast<FileCmd*>(buffer);
+      }
+      FileCmdType command;
+      static char* filename() { return data; }
+      static char* data;
+    };
+
     struct [[gnu::packed]] QueryResponse {
       uint16_t version_major, version_minor, version_patch;
-      uint8_t compression_type, window, lookahead; 
+      uint8_t compression_type, window, lookahead;
     };
+
     struct [[gnu::packed]] ActionResponse {
       enum class Response : uint8_t { SUCCESS, BUSY, FAIL, IOERROR, INVALID };
       Response response;
     };
+
+    template <size_t S>
+    struct [[gnu::packed]] Data {
+      uint8_t data[S];
+    };
   };
-  
-  static bool file_open(char* filename) {
+
+  static bool file_open(char* filename, bool read = false) {
     if (!dummy_transfer) {
-      card.mount();
-      card.openFile(filename, false);
-      if (!card.isFileOpen()) return false;
+      if (!file.open(&root, filename, read ? O_READ : O_CREAT | O_WRITE | O_TRUNC)) {
+        return false;
+      }
     }
-    transfer_active = true;
     data_waiting = 0;
+    data_transfered = 0;
     #if ENABLED(BINARY_STREAM_COMPRESSION)
       heatshrink_decoder_reset(&hsd);
     #endif
@@ -88,7 +130,7 @@ private:
             data_waiting += processed_count;
             if (data_waiting == sizeof(decode_buffer)) {
               if (!dummy_transfer)
-                if (card.write(decode_buffer, data_waiting) < 0) {
+                if (file.write(decode_buffer, data_waiting) < 0) {
                   return false;
                 }
               data_waiting = 0;
@@ -98,71 +140,135 @@ private:
         return true;
       }
     #endif
-    return (dummy_transfer || card.write(buffer, length) >= 0);
+    return (dummy_transfer || file.write(buffer, length) >= 0);
+  }
+
+  //todo: support outbound comprssion?
+  static int16_t file_read(char* buffer, const size_t length) {
+    return file.read(buffer, length);
+  }
+
+  static bool file_write_flush() {
+    #if ENABLED(BINARY_STREAM_COMPRESSION)
+      // flush any buffered data
+      if (data_waiting) {
+        if (file.write(decode_buffer, data_waiting) < 0) return false;
+        data_waiting = 0;
+      }
+      heatshrink_decoder_finish(&hsd);
+    #endif
+    return true;
   }
 
   static bool file_close() {
     if (!dummy_transfer) {
-      #if ENABLED(BINARY_STREAM_COMPRESSION)
-        // flush any buffered data
-        if (data_waiting) {
-          if (card.write(decode_buffer, data_waiting) < 0) return false;
-          data_waiting = 0;
-        }
-      #endif
-      card.closefile();
-      card.release();
+      file_write_flush();
+      if(!file.close()) return false;
     }
-    #if ENABLED(BINARY_STREAM_COMPRESSION)
-      heatshrink_decoder_finish(&hsd);
-    #endif
-    transfer_active = false;
     return true;
   }
 
   static void transfer_abort() {
     if (!dummy_transfer) {
-      card.closefile();
-      card.removeFile(card.filename);
-      card.release();
+      if (protocol_state == RX_TRANSFER_ACTIVE) {
+        char dos_name[13];
+        file.getDosName(dos_name);
+        file.close();
+        card.removeFile(dos_name);
+        protocol_state = IDLE;
+      } else file.close();
       #if ENABLED(BINARY_STREAM_COMPRESSION)
         heatshrink_decoder_finish(&hsd);
       #endif
     }
-    transfer_active = false;
     return;
   }
 
-  enum class FileTransfer : uint8_t { QUERY, ACTION, ACTION_RESPONSE, OPEN, CLOSE, WRITE, ABORT };
+  enum FileTransfer : uint8_t { QUERY, ACTION, ACTION_RESPONSE, OPEN, CLOSE, WRITE, ABORT, REQUEST, LIST, CD, PWD, FILE, MOUNT, UNMOUNT };
+  enum ProtocolState : uint8_t { IDLE, RX_TRANSFER_ACTIVE, TX_WAIT, TX_TRANSFER_SEND, TX_TRANSFER_FINISH, TX_LS_NEXT };
 
-  static size_t data_waiting, transfer_timeout, idle_timeout;
-  static bool transfer_active, dummy_transfer, compression;
-
-  static Packet::ActionResponse response_data;
-  static Packet::QueryResponse query_data;
-  static BinaryStream::PacketInfo tx_packet;
+  static size_t data_waiting, data_transfered, transfer_timeout;
+  static uint8_t protocol_state, queued_state;
+  static bool dummy_transfer, compression;
+  static char tx_buffer[SDFileTransferProtocol_BLOCK_SIZE + 16];
+  static SdFile file, root;
 
 public:
 
-  static void idle() {
-    // If a transfer is interrupted and a file is left open, abort it after TIMEOUT ms
-    const millis_t ms = millis();
-    if (transfer_active && ELAPSED(ms, idle_timeout)) {
-      idle_timeout = ms + IDLE_PERIOD;
-      if (ELAPSED(ms, transfer_timeout)) transfer_abort();
+  static bool idle(BinaryStream *protocol) {
+    static BinaryStream::PacketInfo* active_packet = nullptr;
+    switch(protocol_state) {
+      case IDLE:
+        break;
+      case RX_TRANSFER_ACTIVE:
+        // If a transfer is interrupted and a file is left open, abort it after TIMEOUT ms
+        if (ELAPSED(millis(), transfer_timeout)) {
+          transfer_abort();
+          protocol_state = IDLE;
+        }
+        break;
+      case TX_TRANSFER_SEND: {
+        active_packet = new (tx_buffer) BinaryStream::PacketPacker{BinaryStream::Packet::DATA, (uint8_t)BinaryStream::Protocol::FILE_TRANSFER, (uint8_t)FileTransfer::WRITE, Packet::Data<SDFileTransferProtocol_BLOCK_SIZE>{}};
+        int16_t data_read = file_read(active_packet->payload, SDFileTransferProtocol_BLOCK_SIZE);
+        if (data_read >= 0) {
+          data_transfered += active_packet->payload_length = data_read;
+          protocol->send_packet(active_packet);
+          queued_state = data_read != SDFileTransferProtocol_BLOCK_SIZE ? TX_TRANSFER_FINISH : TX_TRANSFER_SEND;
+          protocol_state = TX_WAIT;
+        } else {
+          abort();
+          protocol_state = IDLE;
+        }
+        break;
+      }
+      case TX_TRANSFER_FINISH:
+        if (active_packet->status == BinaryStream::TransmitState::COMPLETE) {
+          file.close();
+          protocol_state = IDLE;
+        }
+        break;
+      case TX_LS_NEXT: {
+        auto packet = new (tx_buffer) BinaryStream::PacketPacker{ BinaryStream::Packet::DATA, (uint8_t)BinaryStream::Protocol::FILE_TRANSFER, (uint8_t)FileTransfer::FILE, Packet::File{} };
+        packet->payload_obj.data = (char *)&packet->payload_obj + sizeof(Packet::File);
+        packet->payload_obj.data[0] = '\0';
+        dir_t p;
+
+        if(root.readDir(&p, packet->payload_obj.data) > 0) {
+          size_t namelen = strlen(packet->payload_obj.data);
+
+          if (namelen & 0/*LFNSUPPORT*/) {
+            packet->payload_length += namelen; // todo: long filename support is fubar, creating a file is not lfn compatible?
+          } else {
+            root.dirName(p, packet->payload_obj.data);
+            packet->payload_length += strlen(packet->payload_obj.data);
+          }
+          packet->payload_obj.meta_data = !DIR_IS_SUBDIR(&p);
+          packet->payload_obj.size = p.fileSize;
+          protocol->send_packet(packet);
+          active_packet = packet;
+          protocol_state = TX_WAIT;
+          queued_state = TX_LS_NEXT;
+        } else {
+          packet->payload_obj.meta_data = Packet::File::EOL;
+          protocol->send_packet(packet);
+          active_packet = packet;
+          protocol_state = TX_WAIT;
+        }
+        break;
+      }
+      case TX_WAIT:
+        if (active_packet->status == BinaryStream::TransmitState::COMPLETE) {
+          protocol_state = queued_state;
+          queued_state = IDLE;
+        }
+        break;
     }
+
+    return protocol_state != IDLE;
   }
 
-  static void transmit_complete(uint8_t sync, uint8_t response) {
-    SERIAL_ECHOLNPAIR("PFT packet: ", sync, " got response: ", response);
-    // react to failed packet transfers?
-  }
-
-  
   static void transmit_response(BinaryStream *protocol, const Packet::ActionResponse::Response response_type) {
-    response_data.response = response_type;
-    tx_packet.set(BinaryStream::Packet::DATA, (uint8_t)BinaryStream::Protocol::FILE_TRANSFER, (uint8_t)FileTransfer::ACTION_RESPONSE, (char*)&response_data, sizeof(response_data));
-    protocol->send_packet(&tx_packet);
+    protocol->send_packet(new (tx_buffer) BinaryStream::PacketPacker{BinaryStream::Packet::DATA, (uint8_t)BinaryStream::Protocol::FILE_TRANSFER, (uint8_t)FileTransfer::ACTION_RESPONSE, Packet::ActionResponse{response_type}});
   }
 
   // is the protocol ready to receive this packet without blocking
@@ -171,37 +277,134 @@ public:
   }
 
   static void process(BinaryStream *protocol, uint8_t packet_type, char* buffer, const uint16_t length) {
+    /*
+      DELETE
+      MKDIR
+      RMDIR
+
+      GET
+      PUT
+    */
+
+
     using Response = Packet::ActionResponse::Response;
     transfer_timeout = millis() + TIMEOUT;
     switch (static_cast<FileTransfer>(packet_type)) {
       case FileTransfer::QUERY: {
+        protocol->send_packet(new (tx_buffer) BinaryStream::PacketPacker{BinaryStream::Packet::DATA, (uint8_t)BinaryStream::Protocol::FILE_TRANSFER, (uint8_t)FileTransfer::QUERY,
         #if ENABLED(BINARY_STREAM_COMPRESSION)
-            query_data = {VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, 1, HEATSHRINK_STATIC_WINDOW_BITS, HEATSHRINK_STATIC_LOOKAHEAD_BITS};
+            Packet::QueryResponse{VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, 1, HEATSHRINK_STATIC_WINDOW_BITS, HEATSHRINK_STATIC_LOOKAHEAD_BITS}
         #else
-            query_data = {VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, 0, 0, 0};
+            Packet::QueryResponse{VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, 0, 0, 0}
         #endif
-        tx_packet.set(BinaryStream::Packet::DATA, (uint8_t)BinaryStream::Protocol::FILE_TRANSFER, (uint8_t)FileTransfer::QUERY, (char*)&query_data, sizeof(Packet::QueryResponse));
-        protocol->send_packet(&tx_packet);
+        });
         break;
       }
-      case FileTransfer::OPEN:
-        if (transfer_active) {
+      case FileTransfer::MOUNT:
+        if (file.isOpen()) {
           transmit_response(protocol, Response::BUSY);
-        } else {
-          if (Packet::Open::validate(buffer, length)) {
-            auto packet = Packet::Open::decode(buffer);
-            compression = packet.compression_enabled();
-            dummy_transfer = packet.dummy_transfer();
-            if (file_open(packet.filename())) {
-              transmit_response(protocol, Response::SUCCESS);
+          break;
+        }
+        card.mount();
+        if (card.isMounted()) {
+          root = card.getroot();
+          root.rewind();
+          transmit_response(protocol, Response::SUCCESS);
+        } else
+          transmit_response(protocol, Response::IOERROR);
+        break;
+      case FileTransfer::UNMOUNT:
+        if (file.isOpen() || sd_busy()) {
+          transmit_response(protocol, Response::BUSY);
+          break;
+        }
+        card.release();
+        if (card.isMounted())
+          transmit_response(protocol, Response::IOERROR);
+        else
+          transmit_response(protocol, Response::SUCCESS);
+        break;
+      case FileTransfer::LIST: {
+        if (protocol_state != IDLE || sd_busy()) {
+          transmit_response(protocol, Response::BUSY);
+          break;
+        }
+        root.rewind();
+        protocol_state = TX_LS_NEXT;
+        break;
+      }
+      case FileTransfer::CD:
+        if (sd_busy()) {
+          transmit_response(protocol, Response::BUSY);
+          break;
+        }
+        if (Packet::FileCmd::validate(buffer, length)) {
+          auto packet = Packet::FileCmd::decode(buffer);
+          if(!strcmp(packet.filename(), "/"))
+            root = card.getroot();
+          else {
+            SdFile dir;
+            if (dir.open(&root, packet.filename(), O_READ)) {
+              root = dir;
+            } else {
+              transmit_response(protocol, Response::IOERROR);
               break;
             }
           }
-          transmit_response(protocol, Response::FAIL);
+          transmit_response(protocol, Response::SUCCESS);
         }
         break;
+      case FileTransfer::PWD: {
+        if (sd_busy()) {
+          transmit_response(protocol, Response::BUSY);
+          break;
+        }
+        // auto packet = new (tx_buffer) BinaryStream::PacketPacker{ BinaryStream::Packet::DATA, (uint8_t)BinaryStream::Protocol::FILE_TRANSFER, (uint8_t)FileTransfer::FILE, Packet::File{} };
+        // packet->payload_obj.data = (char *)&packet->payload_obj + sizeof(Packet::File);
+        // packet->payload_obj.meta_data = Packet::File::FOLDER;
+        // char* workdir_filename = packet->payload_obj.data;
+        // card.getAbsWorkDirName(workdir_filename);
+        // packet->payload_length += strlen(workdir_filename);
+        // protocol->send_packet(packet);
+        transmit_response(protocol, Response::IOERROR);
+        break;
+      }
+
+      case FileTransfer::OPEN:
+        if (file.isOpen() || sd_busy()) {
+          transmit_response(protocol, Response::BUSY);
+          break;
+        }
+        if (Packet::Open::validate(buffer, length)) {
+          auto packet = Packet::Open::decode(buffer);
+          compression = packet.compression_enabled();
+          dummy_transfer = packet.dummy_transfer();
+          if (file_open(packet.filename())) {
+            transmit_response(protocol, Response::SUCCESS);
+            break;
+          }
+        }
+        transmit_response(protocol, Response::FAIL);
+        break;
+      case FileTransfer::REQUEST:
+        if (protocol_state != IDLE || file.isOpen() || sd_busy()) {
+          transmit_response(protocol, Response::BUSY);
+          break;
+        }
+        if (Packet::Open::validate(buffer, length)) {
+          auto packet = Packet::Open::decode(buffer);
+          compression = packet.compression_enabled();
+          dummy_transfer = packet.dummy_transfer();
+          if (file_open(packet.filename(), true /*reading*/)) {
+            transmit_response(protocol, Response::SUCCESS);
+            protocol_state = TX_TRANSFER_SEND;
+            break;
+          }
+        }
+        transmit_response(protocol, Response::FAIL);
+        break;
       case FileTransfer::CLOSE:
-        if (transfer_active) {
+        if (file.isOpen()  && !sd_busy()) {
           if (file_close())
             transmit_response(protocol, Response::SUCCESS);
           else
@@ -211,14 +414,18 @@ public:
           transmit_response(protocol, Response::INVALID);
         break;
       case FileTransfer::WRITE:
-        if (!transfer_active)
+        if (!file.isOpen() || sd_busy())
           transmit_response(protocol,Response::INVALID);
         else if (!file_write(buffer, length))
           transmit_response(protocol, Response::IOERROR);
         break;
       case FileTransfer::ABORT:
-        transfer_abort();
-        transmit_response(protocol, Response::SUCCESS);
+        if (!sd_busy()) {
+          transfer_abort();
+          transmit_response(protocol, Response::SUCCESS);
+        } else {
+          transmit_response(protocol, Response::BUSY);
+        }
         break;
       default:
         transmit_response(protocol, Response::INVALID);

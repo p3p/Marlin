@@ -111,6 +111,7 @@ public:
   // Print job
   static void openAndPrintFile(const char *name);   // (working directory)
   static void fileHasFinished();
+  static void getAbsWorkDirName(char *dst);
   static void getAbsFilename(char *dst);
   static void printFilename();
   static void startFileprint();

@@ -514,6 +514,30 @@ void CardReader::openLogFile(char * const path) {
 }
 
 //
+// Get the root-relative DOS path of the working directory
+//
+void CardReader::getAbsWorkDirName(char *dst) {
+  *dst++ = '/';
+  uint8_t cnt = 1;
+
+  auto appendAtom = [&](SdFile &file) {
+    file.getDosName(dst);
+    #if ENABLED(LONG_FILENAME_HOST_SUPPORT)
+      selectFileByName(dst);
+      if (longFilename[0]) {
+        strcpy(dst, longFilename);
+      }
+    #endif
+    while (*dst && cnt < MAXPATHNAMELENGTH) { dst++; cnt++; }
+    if (cnt < MAXPATHNAMELENGTH) { *dst = '/'; dst++; cnt++; }
+  };
+
+  for (uint8_t i = 0; i < workDirDepth; i++)                // Loop down to current work dir
+    appendAtom(workDirParents[i]);
+  *dst = '\0';
+}
+
+//
 // Get the root-relative DOS path of the selected file
 //
 void CardReader::getAbsFilename(char *dst) {
@@ -950,6 +974,7 @@ int8_t CardReader::cdup() {
 
 void CardReader::cdroot() {
   workDir = root;
+  workDirDepth = 0;
   flag.workDirIsRoot = true;
   TERN_(SDCARD_SORT_ALPHA, presort());
 }
