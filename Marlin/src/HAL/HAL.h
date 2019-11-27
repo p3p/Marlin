@@ -32,3 +32,7 @@ inline void watchdog_refresh() {
     HAL_watchdog_refresh();
   #endif
 }
+
+#ifndef HAL_ISR_OPTIMIZE
+  #define HAL_ISR_OPTIMIZE
+#endif

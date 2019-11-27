@@ -524,8 +524,8 @@ class Temperature {
     /**
      * Called from the Temperature ISR
      */
-    static void readings_ready();
-    static void tick();
+    HAL_ISR_OPTIMIZE static void readings_ready();
+    HAL_ISR_OPTIMIZE static void tick();
 
     /**
      * Call periodically to manage heaters

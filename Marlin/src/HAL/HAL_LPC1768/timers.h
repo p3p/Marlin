@@ -51,9 +51,11 @@
 // Defines
 // ------------------------
 
+#define HAL_ISR_OPTIMIZE [[gnu::optimize("O3"), gnu::always_inline]] inline
+
 #define _HAL_TIMER(T) _CAT(LPC_TIM, T)
 #define _HAL_TIMER_IRQ(T) TIMER##T##_IRQn
-#define __HAL_TIMER_ISR(T) extern "C" void TIMER##T##_IRQHandler()
+#define __HAL_TIMER_ISR(T) extern "C" [[gnu::optimize("O3") /*, gnu::section(".ramcode")*/ ]] void TIMER##T##_IRQHandler()
 #define _HAL_TIMER_ISR(T)  __HAL_TIMER_ISR(T)
 
 typedef uint32_t hal_timer_t;
@@ -152,7 +154,7 @@ FORCE_INLINE static bool HAL_timer_interrupt_enabled(const uint8_t timer_num) {
   return false;
 }
 
-FORCE_INLINE static void HAL_timer_isr_prologue(const uint8_t timer_num) {
+HAL_ISR_OPTIMIZE void HAL_timer_isr_prologue(const uint8_t timer_num) {
   switch (timer_num) {
     case 0: SBI(STEP_TIMER->IR, SBIT_CNTEN); break;
     case 1: SBI(TEMP_TIMER->IR, SBIT_CNTEN); break;

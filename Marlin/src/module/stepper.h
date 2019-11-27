@@ -345,17 +345,17 @@ class Stepper {
     // Interrupt Service Routines
 
     // The ISR scheduler
-    static void isr();
+    HAL_ISR_OPTIMIZE static void isr();
 
     // The stepper pulse phase ISR
-    static void stepper_pulse_phase_isr();
+    HAL_ISR_OPTIMIZE static void stepper_pulse_phase_isr();
 
     // The stepper block processing phase ISR
-    static uint32_t stepper_block_phase_isr();
+    HAL_ISR_OPTIMIZE static uint32_t stepper_block_phase_isr();
 
     #if ENABLED(LIN_ADVANCE)
       // The Linear advance stepper ISR
-      static uint32_t advance_isr();
+      HAL_ISR_OPTIMIZE static uint32_t advance_isr();
     #endif
 
     // Check if the given block is busy or not - Must not be called from ISR contexts
@@ -462,7 +462,7 @@ class Stepper {
     }
 
     // Set direction bits for all steppers
-    static void set_directions();
+    HAL_ISR_OPTIMIZE static void set_directions();
 
   private:
 
@@ -531,8 +531,8 @@ class Stepper {
     }
 
     #if ENABLED(S_CURVE_ACCELERATION)
-      static void _calc_bezier_curve_coeffs(const int32_t v0, const int32_t v1, const uint32_t av);
-      static int32_t _eval_bezier_curve(const uint32_t curr_step);
+      HAL_ISR_OPTIMIZE static void _calc_bezier_curve_coeffs(const int32_t v0, const int32_t v1, const uint32_t av);
+      HAL_ISR_OPTIMIZE static int32_t _eval_bezier_curve(const uint32_t curr_step);
     #endif
 
     #if HAS_DIGIPOTSS || HAS_MOTOR_CURRENT_PWM
