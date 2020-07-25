@@ -7,12 +7,12 @@
 #include <algorithm>
 #include <cassert>
 #include <map>
+#include <sstream>
 
 extern void setup();
 extern void loop();
 extern "C" void TIMER0_IRQHandler();
 extern "C" void TIMER1_IRQHandler();
-
 
 constexpr inline uint64_t tickConvertFrequency(std::uint64_t value, std::uint64_t from, std::uint64_t to) {
   return from > to ? value / (from / to) : value * (to / from);
@@ -30,8 +30,22 @@ public:
     return tickConvertFrequency(system_ticks - timer_offset, timer_rate, system_frequency);
   }
 
+  bool interrupt(const uint64_t ticks, const uint64_t frequency) {
+    return ticks > next_interrupt(frequency);
+  }
+
+  void execute() {
+    if (!initilised) {
+      initilised = true;
+      thread_init();
+    } else {
+      thread_loop();
+    }
+  }
+
   bool initilised = false;
   bool timer_enabled = false;
+
   std::uint64_t timer_rate{0};
   std::uint64_t timer_compare{0};
   std::uint64_t timer_offset{0};
@@ -41,16 +55,80 @@ public:
   std::function<void()> thread_init;
 };
 
+struct KernelTimer {
+  KernelTimer(std::string name, void (*callback)()) : name(name), isr_function(callback) {}
+
+  bool interrupt(const uint64_t source_count, const uint64_t frequency) {
+    return source_count > next_interrupt(frequency);
+  }
+
+  uint64_t next_interrupt(const uint64_t source_frequency) {
+    return active ? source_offset + tickConvertFrequency(compare, timer_frequency, source_frequency) : std::numeric_limits<uint64_t>::max();
+  }
+
+  void initialise(const uint64_t timer_frequency) { this->timer_frequency = timer_frequency; }
+  void start(const uint64_t source_count, const uint64_t interrupt_frequency) {
+    compare = timer_frequency / interrupt_frequency;
+    source_offset = source_count;
+  }
+  void enable() { active = true; }
+  bool enabled() { return active; }
+  void disable() { active = false; }
+
+  // in timer frequency
+  void set_compare(const uint64_t compare) { this->compare = compare; }
+  uint64_t get_compare() { return compare; }
+  uint64_t get_count(const uint64_t source_count, const uint64_t source_frequency) { return tickConvertFrequency(source_count - source_offset, source_frequency, timer_frequency); }
+
+
+  void set_isr(std::string name, void (*callback)()) {
+    isr_function = {callback};
+    this->name = name;
+  }
+  void execute() {
+    isr_function();
+  }
+
+  std::string name;
+  bool active = false;
+  uint64_t compare = 0, source_offset = 0, timer_frequency = 0;
+  std::function<void()> isr_function;
+};
+
 class Kernel {
 public:
   // ordered highest priority first
-  Kernel() : threads({KernelThread{"Stepper ISR", TIMER0_IRQHandler}, {"Temperature ISR", TIMER1_IRQHandler}, {"Marlin Loop", loop, setup}}) {}
-  std::array<KernelThread, 3> threads;
+  Kernel() : threads({KernelThread{"Marlin Loop", loop, setup}}),
+             timers({KernelTimer{"Stepper ISR", TIMER0_IRQHandler}, {"Temperate ISR", TIMER1_IRQHandler}}),
+             last_clock_read(clock.now()) {
+    threads[0].timer_offset = getTicks();
+    threads[0].timer_rate = 1000000;
+    threads[0].timer_compare = 1000;
+  }
+  std::array<KernelThread, 1> threads;
+  std::array<KernelTimer, 2> timers;
+  //std::array<KernelTimer, N> gpio_interrupt;
+
   KernelThread* this_thread = nullptr;
+  std::vector<KernelThread*> call_stack;
   bool timers_active = true;
 
+  std::chrono::high_resolution_clock clock;
+  std::chrono::high_resolution_clock::time_point last_clock_read;
+  inline uint64_t getRealtimeTicks() {
+    auto now = clock.now();
+    auto delta = now - last_clock_read;
+    uint64_t delta_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(delta).count();
+    uint64_t delta_uint64_scaled = delta_uint64 * realtime_scale;
+    if (delta_uint64_scaled != 0) {
+      last_clock_read = now;
+      realtime_nanos += delta_uint64_scaled;
+    }
+    return nanosToTicks(realtime_nanos);
+  }
+
   //execute highest priority thread with closest interrupt, return true if something was executed
-  bool execute_loop( uint64_t max_end_ticks = std::numeric_limits<uint64_t>::max());
+  bool execute_loop(uint64_t max_end_ticks = std::numeric_limits<uint64_t>::max());
   // if a thread wants to wait, see what should be executed during that wait
   void delayCycles(uint64_t cycles);
   // this was neede for when marlin loops idle waiting for an event with no delays
@@ -65,64 +143,69 @@ public:
     timers_active = true;
   }
 
-  inline void timerInit(uint8_t thread_id, uint32_t rate) {
-    if (thread_id < threads.size()) {
-       threads[thread_id].timer_rate = rate;
-      // printf("Timer[%d] Initialised( rate: %d )\n", thread_id, rate);
+  inline void timerInit(uint8_t timer_id, uint32_t rate) {
+    if (timer_id < timers.size()) {
+       timers[timer_id].timer_frequency = rate;
+      // printf("Timer[%d] Initialised( rate: %d )\n", timer_id, rate);
     }
   }
 
-  inline void timerStart(uint8_t thread_id, uint32_t interrupt_frequency) {
-    if (thread_id < threads.size()) {
-      threads[thread_id].timer_compare = threads[thread_id].timer_rate / interrupt_frequency;
-      threads[thread_id].timer_offset = ticks.load();
-      // printf("Timer[%d] Started( frequency: %d compare: %ld)\n", thread_id, interrupt_frequency, threads[thread_id].timer_compare);
+  inline void timerStart(uint8_t timer_id, uint32_t interrupt_frequency) {
+    if (timer_id < timers.size()) {
+      timers[timer_id].compare = timers[timer_id].timer_frequency / interrupt_frequency;
+      timers[timer_id].source_offset = getTicks();
+      // printf("Timer[%d] Started( frequency: %d compare: %ld)\n", timer_id, interrupt_frequency, timers[timer_id].compare);
     }
   }
 
-  inline void timerEnable(uint8_t thread_id) {
-    if (thread_id < threads.size()) {
-      threads[thread_id].timer_enabled = true;
-      // printf("Timer[%d] Enabled\n", thread_id);
+  inline void timerEnable(uint8_t timer_id) {
+    if (timer_id < timers.size()) {
+      timers[timer_id].active = true;
+      // printf("Timer[%d] Enabled\n", timer_id);
     }
   }
 
-  inline bool timerEnabled(uint8_t thread_id) {
-    if (thread_id < threads.size())
-      return threads[thread_id].timer_enabled;
+  inline bool timerEnabled(uint8_t timer_id) {
+    if (timer_id < timers.size())
+      return timers[timer_id].active;
     return false;
   }
 
-  inline void timerDisable(uint8_t thread_id) {
-    if (thread_id < threads.size()) {
-      threads[thread_id].timer_enabled = false;
-      //printf("Timer[%d] Disabled\n", thread_id);
+  inline void timerDisable(uint8_t timer_id) {
+    if (timer_id < timers.size()) {
+      timers[timer_id].active = false;
+      //printf("Timer[%d] Disabled\n", timer_id);
     }
   }
 
-  inline void timerSetCompare(uint8_t thread_id, uint64_t compare) {
-    if (thread_id < threads.size()) {
-      threads[thread_id].timer_compare = compare;
+  inline void timerSetCompare(uint8_t timer_id, uint64_t compare) {
+    if (timer_id < timers.size()) {
+      timers[timer_id].compare = compare;
     }
   }
 
-  inline uint64_t timerGetCount(uint8_t thread_id) {
-    if (thread_id < threads.size()) {
-      ticks.fetch_add(1 + nanosToTicks(100, threads[thread_id].timer_rate)); // todo: realtime control? time must pass here fore the stepper isr pulse counter
-      return threads[thread_id].timer_count(ticks.load(), frequency);
+  inline uint64_t timerGetCount(uint8_t timer_id) {
+    if (timer_id < timers.size()) {
+      //ticks.fetch_add(1 + nanosToTicks(100, timers[timer_id].timer_frequency)); // todo: realtime control? time must pass here fore the stepper isr pulse counter
+      //setTicks(getTicks() + 1 + nanosToTicks(100, timers[timer_id].timer_frequency));
+      return timers[timer_id].get_count(getTicks(), frequency);
     }
     return 0;
   }
 
-  inline uint64_t timerGetCompare(uint8_t thread_id) {
-    if (thread_id < threads.size())
-      return threads[thread_id].timer_compare;
+  inline uint64_t timerGetCompare(uint8_t timer_id) {
+    if (timer_id < timers.size())
+      return timers[timer_id].compare;
     return 0;
   }
 
   // Clock
   inline uint64_t getTicks() {
-    return ticks;
+    return getRealtimeTicks();//ticks.load();
+  }
+
+  inline void setTicks(uint64_t new_ticks) {
+    //ticks.store(new_ticks);
   }
 
   // constants to reduce risk of typos
@@ -147,8 +230,8 @@ public:
   }
 
   inline uint64_t nanos() {
-    ticks.fetch_add(nanosToTicks(100)); // todo: some things loop on a delay until the expected period has passed, increase ticks in an interupt at clock frequency?
-    return ticksToNanos(ticks);
+    setTicks(getTicks() + nanosToTicks(100)); // Marlin has loops that only break after x ticks, so we need to increment ticks here
+    return ticksToNanos(getTicks());
   }
 
   inline uint64_t micros() {
@@ -160,7 +243,7 @@ public:
   }
 
   inline double seconds() {
-    return ticksToNanos(ticks.load()) / double(ONE_BILLION);
+    return ticksToNanos(getTicks()) / double(ONE_BILLION);
   }
 
   inline void delayNanos(uint64_t ns) {
@@ -179,7 +262,9 @@ public:
     delayCycles(nanosToTicks(secs * ONE_BILLION));
   }
 
+  float realtime_scale = 1.0;
   std::atomic_uint64_t ticks{0};
+  uint64_t realtime_nanos = 0;
   static constexpr uint32_t frequency = 100'000'000;
 };
 
