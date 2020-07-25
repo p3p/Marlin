@@ -2,7 +2,6 @@
 
 #include "visualisation.h"
 
-
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
@@ -24,7 +23,7 @@ Visualisation::Visualisation() :
   y_axis(Y_ENABLE_PIN, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN, INVERT_Y_DIR),
   z_axis(Z_ENABLE_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN, INVERT_Z_DIR),
   extruder0(E0_ENABLE_PIN, E0_DIR_PIN, E0_STEP_PIN, P_NC, P_NC, INVERT_E0_DIR) {
-    Gpio::attach(x_axis.step_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
+    Gpio::attach(x_axis.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); }); //todo this works too
     Gpio::attach(x_axis.min_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
     Gpio::attach(x_axis.max_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
     Gpio::attach(y_axis.step_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
@@ -40,38 +39,12 @@ Visualisation::Visualisation() :
 
 Visualisation::~Visualisation() {}
 
-void Visualisation::create(std::size_t width, std::size_t height) {
-  SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-  SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
-  SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
-  SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
-  SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
-  SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
-
-  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
-  SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-
-  SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 4 );
-  SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 1 );
-  SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
-
-  window = SDL_CreateWindow( "Printer Visualisation", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
-  context = SDL_GL_CreateContext( window );
-  GLenum glewError = glewInit(); // only needed on windows
-
-  glEnable(GL_MULTISAMPLE);
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
-
-  glClearColor( 0.1, 0.1, 0.1, 1.0 );
-  glViewport( 0, 0, width, height );
-
+void Visualisation::create() {
   // todo : Y axis change fix, worked around by not joining
   // todo : very spiky corners after 45 degs, again just worked around by not joining
   const char * geometry_shader =
 R"SHADERSTR(
-    #version 410 core
+    #version 330 core
     layout (lines_adjacency) in;
     layout (triangle_strip, max_vertices = 28) out;
 
@@ -95,18 +68,7 @@ R"SHADERSTR(
       EndPrimitive();
     }
 
-    const float epsilon = 0.00001;
-    bool about_zero(float value) {
-      return step(-epsilon, value) * (1.0 - step(epsilon, value)) == 0.0;
-    }
-
-    bool collinear_xz(vec3 a, vec3 b, vec3 c){
-      return cross(vec3(b.xz, 0) - vec3(a.xz, 0), vec3(c.xz, 0) - vec3(b.xz, 0)) == 0.0;
-    }
-
-    bool collinear(vec3 a, vec3 b, vec3 c){
-      return cross(b - a, c - b) == 0.0;
-    }
+    const float epsilon = 0.000001;
 
     void main() {
       vec3 prev = gl_in[0].gl_Position.xyz;
@@ -120,7 +82,7 @@ R"SHADERSTR(
 
       vec3 forward = normalize(end - start);
       vec3 left = normalize(cross(forward, g_normal[2])); // what if formward is world_up? zero vector
-      if (left == 0.0) return; //panic
+      if (left == vec3(0.0)) return; //panic
 
       vec3 up = normalize(cross(forward, left));
       up *= sign(up); // make sure up is positive
@@ -141,12 +103,12 @@ R"SHADERSTR(
       vec2 xz_dir_c = normalize(next.xz - end.xz);
 
 
-      // pick on edge cases that ar not taken into account, changle to extrude state, change in z, colliniarity in xy and angle between vectors more than 90 degrees
-      if(first_segment || active_color.a != prev_color.a || forward.y > epsilon || collinear_xz(prev, start, end) || dot(start - prev, end - start) < 0.0) {
+      // remove edge cases that will break teh following algorithm, angle more than 90 degrees or 0 (points collinear), also break on extrude state change (color)
+      if(first_segment || active_color.a != prev_color.a || normalize(next - prev).y != 0.0 ||  dot(normalize(start.xz - prev.xz), normalize(end.xz - start.xz)) < epsilon || dot(normalize(start.xz - prev.xz), normalize(end.xz - start.xz)) > 1.0 - epsilon) {
         start_lhs = left;
         first_segment = true;
       }
-      if(last_segment || active_color.a != next_color.a || normalize(next - end).y > epsilon || collinear_xz(start, end, next) || dot(end - start, next - end) < 0.0) {
+      if(last_segment || active_color.a != next_color.a || normalize(next - prev).y != 0.0 || dot(normalize(end.xz - start.xz), normalize(next.xz - end.xz)) < epsilon || dot(normalize(end.xz - start.xz), normalize(next.xz - end.xz)) > 1.0 - epsilon) {
         end_lhs = left;
         last_segment = true;
       }
@@ -197,7 +159,7 @@ R"SHADERSTR(
 )SHADERSTR";
 
   const char * path_vertex_shader = R"SHADERSTR(
-    #version 410
+    #version 330
     in vec3 i_position;
     in vec3 i_normal;
     in vec4 i_color;
@@ -210,7 +172,7 @@ R"SHADERSTR(
     };)SHADERSTR";
 
   const char * path_fragment_shader = R"SHADERSTR(
-    #version 410
+    #version 330
     in vec4 v_color;
     out vec4 o_color;
     in vec3 v_normal;
@@ -249,7 +211,7 @@ R"SHADERSTR(
     };)SHADERSTR";
 
   const char * vertex_shader = R"SHADERSTR(
-    #version 410
+    #version 330
     in vec3 i_position;
     in vec3 i_normal;
     in vec4 i_color;
@@ -265,7 +227,7 @@ R"SHADERSTR(
     };)SHADERSTR";
 
   const char * fragment_shader = R"SHADERSTR(
-    #version 410
+    #version 330
     in vec4 v_color;
     in vec3 v_normal;
     in vec3 v_position;
@@ -293,14 +255,23 @@ R"SHADERSTR(
   glVertexAttribPointer( attrib_normal, 3, GL_FLOAT, GL_FALSE, sizeof(cp_vertex), ( void * )(sizeof(cp_vertex::position)) );
   glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof(cp_vertex), ( void * )(sizeof(cp_vertex::position) + sizeof(cp_vertex::normal)) );
 
-  camera = { {50.0f, 200.0f, -200.0f}, {100.0f, 0.0f, -100.0f}, {0.0f, 1.0f, 0.0f}, float(width) / float(height), glm::radians(45.0f), 0.1f, 1000.0f};
+  framebuffer = new opengl_util::MsaaFrameBuffer();
+  if (!((opengl_util::MsaaFrameBuffer*)framebuffer)->create(100, 100, 4)) {
+    fprintf(stderr, "Failed to initialise MSAA Framebuffer falling back to TextureFramebuffer\n");
+    delete framebuffer;
+    framebuffer = new opengl_util::TextureFrameBuffer();
+    if (!((opengl_util::TextureFrameBuffer*)framebuffer)->create(100,100)) {
+      fprintf(stderr, "Unable to initialise a Framebuffer\n");
+    }
+  }
+
+  camera = { {37.0f, 121.0f, 129.0f}, {-192.0f, -25.0, 0.0f}, {0.0f, 1.0f, 0.0f}, float(100) / float(100), glm::radians(45.0f), 0.1f, 1000.0f};
   camera.generate();
 }
 
 void Visualisation::process_event(SDL_Event& e) {
   switch (e.type) {
     case SDL_KEYDOWN: case SDL_KEYUP: {
-      if (e.key.windowID == SDL_GetWindowID( window ))
         switch(e.key.keysym.sym) {
           case SDLK_w : {
             input_state[0] = e.type == SDL_KEYDOWN;
@@ -370,22 +341,7 @@ void Visualisation::process_event(SDL_Event& e) {
         }
       break;
     }
-    case SDL_MOUSEBUTTONDOWN: case SDL_MOUSEBUTTONUP: {
-      if (e.button.button == 1 && e.key.windowID == SDL_GetWindowID( window )) {
-        SDL_SetRelativeMouseMode((SDL_bool)!mouse_captured);
-        mouse_captured = !mouse_captured;
-      }
-      break;
-    }
-    case SDL_MOUSEMOTION: {
-      if (mouse_captured) {
-        camera.rotation.x += (e.motion.xrel * 0.2f);
-        camera.rotation.y += (e.motion.yrel * 0.2f);
-        if (camera.rotation.y > 89.0f) camera.rotation.y = 89.0f;
-        else if (camera.rotation.y < -89.0f) camera.rotation.y = -89.0f;
-      }
-      break;
-    }
+
   }
 }
 
@@ -399,41 +355,17 @@ void Visualisation::gpio_event_handler(GpioEvent& event) {
 
 using millisec = std::chrono::duration<float, std::milli>;
 void Visualisation::update() {
-  auto now = clock.now();
-  float delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - last_update).count();
-  last_update = now;
+  // auto now = clock.now();
+  // float delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - last_update).count();
+  // last_update = now;
 
-  if (input_state[0]) {
-    camera.position -= camera.speed * camera.direction * delta;
-  }
-  if (input_state[1]) {
-    camera.position += glm::normalize(glm::cross(camera.direction, camera.up)) * camera.speed * delta;
-  }
-  if (input_state[2]) {
-    camera.position += camera.speed * camera.direction * delta;
-  }
-  if (input_state[3]) {
-    camera.position -= glm::normalize(glm::cross(camera.direction, camera.up)) * camera.speed * delta;
-  }
-  if (input_state[4]) {
-    camera.position += camera.world_up * camera.speed * delta;
-  }
-  if (input_state[5]) {
-    camera.position -= camera.world_up * camera.speed * delta;
-  }
-
-  camera.update_direction();
   if (follow_mode == 1) {
     camera.position = glm::vec3(effector_pos.x, camera.position.y, effector_pos.z);
   }
   if (follow_mode == 2) {
     camera.position = glm::vec3(camera.position.x, effector_pos.y + follow_offset.y, camera.position.z);
   }
-
   camera.update_view();
-
-  SDL_GL_MakeCurrent(window, context);
-  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
   glm::mat4 model_tmatrix = glm::translate(glm::mat4(1.0f), glm::vec3(effector_pos.x, effector_pos.y, effector_pos.z));
   glm::mat4 model_smatrix = glm::scale(glm::mat4(1.0f), effector_scale );
@@ -466,6 +398,16 @@ void Visualisation::update() {
         glBufferData( GL_ARRAY_BUFFER, data_length * sizeof(std::remove_pointer<decltype(active_path)>::type::value_type), &(*active_path)[0], GL_STATIC_DRAW );
         glDrawArrays( GL_LINE_STRIP_ADJACENCY, 0, data_length);
       }
+
+      if (render_full_path) {
+        for (auto& path : full_path) {
+          if (&path[0] == &(*active_path)[0]) break;
+          // these are no longer dynamic buffers and could have the geometry baked rather than continue using the geometery shader
+          std::size_t data_length = path.size();
+          glBufferData( GL_ARRAY_BUFFER, data_length * sizeof(std::remove_reference<decltype(path)>::type::value_type), &path[0], GL_STATIC_DRAW );
+          glDrawArrays( GL_LINE_STRIP_ADJACENCY, 0, data_length);
+        }
+      }
     }
 
     glUseProgram( path_program );
@@ -488,20 +430,19 @@ void Visualisation::update() {
     }
   }
 
-  SDL_GL_SwapWindow( window );
-
 }
 
 void Visualisation::destroy() {
-  SDL_GL_DeleteContext( context );
-  SDL_DestroyWindow( window );
-  SDL_Quit();
+  if(framebuffer != nullptr) {
+    framebuffer->release();
+    delete framebuffer;
+  }
 }
 
 void Visualisation::set_head_position(glm::vec4 position) {
   if (position != effector_pos) {
 
-    if (glm::length(glm::vec3(position) - glm::vec3(last_extrusion_check)) > 0.1f) { // smooths out extrusion over a minimum length to fill in gaps todo: implement an simulatiopn to do this better
+    if (glm::length(glm::vec3(position) - glm::vec3(last_extrusion_check)) > 0.5f) { // smooths out extrusion over a minimum length to fill in gaps todo: implement an simulation to do this better
       extruding = position.w - last_extrusion_check.w > 0.0f;
       last_extrusion_check = position;
     }
@@ -546,6 +487,81 @@ void Visualisation::set_head_position(glm::vec4 position) {
 
 bool Visualisation::points_are_collinear(glm::vec3 a, glm::vec3 b, glm::vec3 c) {
   return glm::length(glm::dot(b - a, c - a) - (glm::length(b - a) * glm::length(c - a))) < 0.0002; // could be increased to further reduce rendered geometry
+}
+
+
+void Visualisation::ui_viewport_callback(UiWindow* window) {
+  auto now = clock.now();
+  float delta = std::chrono::duration_cast<std::chrono::duration<float>>(now- last_update).count();
+  last_update = now;
+
+  Viewport& viewport = *((Viewport*)window);
+
+  if (viewport.dirty) {
+      framebuffer->update(viewport.viewport_size.x, viewport.viewport_size.y);
+      viewport.texture_id = framebuffer->texture_id();
+      camera.update_aspect_ratio(viewport.viewport_size.x / viewport.viewport_size.y);
+  }
+
+  if (viewport.focused) {
+    if(ImGui::IsKeyDown(SDL_SCANCODE_W)) {
+      camera.position += camera.speed * camera.direction * delta;
+    }
+    if(ImGui::IsKeyDown(SDL_SCANCODE_S)) {
+      camera.position -= camera.speed * camera.direction * delta;
+    }
+    if(ImGui::IsKeyDown(SDL_SCANCODE_A)) {
+      camera.position -= glm::normalize(glm::cross(camera.direction, camera.up)) * camera.speed * delta;
+    }
+    if(ImGui::IsKeyDown(SDL_SCANCODE_D)) {
+      camera.position += glm::normalize(glm::cross(camera.direction, camera.up)) * camera.speed * delta;
+    }
+    if(ImGui::IsKeyDown(SDL_SCANCODE_SPACE)) {
+      camera.position += camera.world_up * camera.speed * delta;
+    }
+    if(ImGui::IsKeyDown(SDL_SCANCODE_LSHIFT)) {
+      camera.position -= camera.world_up * camera.speed * delta;
+    }
+  }
+
+  bool last_mouse_captured = mouse_captured;
+  if (ImGui::IsMouseDown(0) && viewport.hovered) {
+    mouse_captured = true;
+  } else if (!ImGui::IsMouseDown(0)) {
+    mouse_captured = false;
+  }
+
+  if (mouse_captured && !last_mouse_captured) {
+    ImVec2 mouse_pos = ImGui::GetMousePos();
+    mouse_lock_pos = {mouse_pos.x, mouse_pos.y};
+    SDL_SetWindowGrab(SDL_GL_GetCurrentWindow(), SDL_TRUE);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+  } else if (!mouse_captured && last_mouse_captured) {
+    SDL_SetRelativeMouseMode(SDL_FALSE);
+    SDL_SetWindowGrab(SDL_GL_GetCurrentWindow(), SDL_FALSE);
+    SDL_WarpMouseInWindow(SDL_GL_GetCurrentWindow(), mouse_lock_pos.x, mouse_lock_pos.y);
+  } else if (mouse_captured) {
+    if(ImGui::IsMouseDragging(0)) {
+      camera.rotation.x -= ImGui::GetIO().MouseDelta.x * 0.2;
+      camera.rotation.y -= ImGui::GetIO().MouseDelta.y * 0.2;
+      if (camera.rotation.y > 89.0f) camera.rotation.y = 89.0f;
+      else if (camera.rotation.y < -89.0f) camera.rotation.y = -89.0f;
+    }
+  }
+};
+
+void Visualisation::ui_info_callback(UiWindow*) {
+  ImGui::SliderFloat("sim speed 100", &kernel.realtime_scale, 0.0f, 100.0f);
+  ImGui::SliderFloat("sim speed 10", &kernel.realtime_scale, 0.0f, 10.0f);
+  ImGui::SliderFloat("sim speed 1", &kernel.realtime_scale, 0.0f, 1.0f);
+  ImGui::SliderFloat("sim speed 0.1", &kernel.realtime_scale, 0.0f, 0.1f);
+  uint64_t hours = (kernel.realtime_nanos / (Kernel::ONE_BILLION * 60 * 60)) ;
+  uint64_t remainder = (kernel.realtime_nanos % (Kernel::ONE_BILLION * 60 * 60));
+  uint64_t mins = (remainder / (Kernel::ONE_BILLION * 60));
+  remainder = (remainder % (Kernel::ONE_BILLION * 60));
+  uint64_t seconds = remainder / (Kernel::ONE_BILLION);
+  remainder = remainder % (Kernel::ONE_BILLION);
+  ImGui::Text("%02ld:%02ld:%02ld.%ld", hours, mins, seconds, remainder);
 }
 
 #endif
