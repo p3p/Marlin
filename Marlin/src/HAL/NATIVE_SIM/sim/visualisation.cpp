@@ -12,9 +12,13 @@
 
 #include <vector>
 #include <array>
+#include <imgui_internal.h>
+#include <implot.h>
 
 #include "hardware/LinearAxis.h"
 #include "src/inc/MarlinConfig.h"
+
+
 
 constexpr uint32_t steps_per_unit[] = DEFAULT_AXIS_STEPS_PER_UNIT;
 
@@ -37,7 +41,9 @@ Visualisation::Visualisation() :
     Gpio::attach(extruder0.max_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
   }
 
-Visualisation::~Visualisation() {}
+Visualisation::~Visualisation() {
+  destroy();
+}
 
 void Visualisation::create() {
   // todo : Y axis change fix, worked around by not joining
@@ -155,7 +161,7 @@ R"SHADERSTR(
       emit(5, 4, 7, 6);
 
       //emit(0, 1, 8, 0); //show up normal
-    };
+    }
 )SHADERSTR";
 
   const char * path_vertex_shader = R"SHADERSTR(
@@ -169,7 +175,7 @@ R"SHADERSTR(
         g_color = i_color;
         g_normal = i_normal;
         gl_Position = vec4( i_position, 1.0 );
-    };)SHADERSTR";
+    })SHADERSTR";
 
   const char * path_fragment_shader = R"SHADERSTR(
     #version 330
@@ -208,7 +214,7 @@ R"SHADERSTR(
         } else {
           o_color = vec4(v_color.rgb * (ambient + ((diffuse + specular) * attenuation)), v_color.a);
         }
-    };)SHADERSTR";
+    })SHADERSTR";
 
   const char * vertex_shader = R"SHADERSTR(
     #version 330
@@ -224,7 +230,7 @@ R"SHADERSTR(
         v_normal = i_normal;
         v_position = i_position;
         gl_Position = u_mvp * vec4( i_position, 1.0 );
-    };)SHADERSTR";
+    })SHADERSTR";
 
   const char * fragment_shader = R"SHADERSTR(
     #version 330
@@ -239,7 +245,7 @@ R"SHADERSTR(
         } else {
           o_color = v_color;
         }
-    };)SHADERSTR";
+    })SHADERSTR";
 
   path_program = ShaderProgram::loadProgram(path_vertex_shader, path_fragment_shader, geometry_shader);
   program = ShaderProgram::loadProgram(vertex_shader, fragment_shader);
@@ -270,79 +276,7 @@ R"SHADERSTR(
 }
 
 void Visualisation::process_event(SDL_Event& e) {
-  switch (e.type) {
-    case SDL_KEYDOWN: case SDL_KEYUP: {
-        switch(e.key.keysym.sym) {
-          case SDLK_w : {
-            input_state[0] = e.type == SDL_KEYDOWN;
-            break;
-          }
-          case SDLK_a : {
-            input_state[1] = e.type == SDL_KEYDOWN;
-            break;
-          }
-          case SDLK_s : {
-            input_state[2] = e.type == SDL_KEYDOWN;
-            break;
-          }
-          case SDLK_d : {
-            input_state[3] = e.type == SDL_KEYDOWN;
-            break;
-          }
-          case SDLK_SPACE : {
-            input_state[4] = e.type == SDL_KEYDOWN;
-            break;
-          }
-          case SDLK_LSHIFT : {
-            input_state[5] = e.type == SDL_KEYDOWN;
-            break;
-          }
 
-          case SDLK_f :{
-            if( e.type == SDL_KEYUP) {
-              follow_mode = follow_mode == 1? 0 : 1;
-              if (follow_mode) {
-                camera.position = glm::vec3(effector_pos.x, effector_pos.y + 10.0, effector_pos.z);
-                camera.rotation.y = 89.99999;
-              }
-            }
-            break;
-          }
-          case SDLK_g :{
-            if( e.type == SDL_KEYUP) {
-              follow_mode = follow_mode == 2? 0 : 2;
-              if (follow_mode) {
-                follow_offset = camera.position - glm::vec3(effector_pos);
-              }
-            }
-            break;
-          }
-          case SDLK_F1: {
-            if (e.type == SDL_KEYUP) {
-              SDL_SetRelativeMouseMode((SDL_bool)!mouse_captured);
-              mouse_captured = !mouse_captured;
-            }
-            break;
-          }
-          case SDLK_F2: {
-            if (e.type == SDL_KEYUP) {
-              render_full_path = !render_full_path;
-            }
-            break;
-          }
-          case SDLK_F3: {
-            if (e.type == SDL_KEYUP) {
-              render_path_line = !render_path_line;
-            }
-            break;
-          }
-          default:
-            break;
-        }
-      break;
-    }
-
-  }
 }
 
 void Visualisation::gpio_event_handler(GpioEvent& event) {
@@ -350,7 +284,7 @@ void Visualisation::gpio_event_handler(GpioEvent& event) {
   y_axis.interrupt(event);
   z_axis.interrupt(event);
   extruder0.interrupt(event);
-  set_head_position(glm::vec4{x_axis.position / (float)steps_per_unit[0], z_axis.position / (float)steps_per_unit[0], y_axis.position / (float)steps_per_unit[1] * -1.0f, extruder0.position  / (float)steps_per_unit[3]});
+  set_head_position(glm::vec4{x_axis.position / (float)steps_per_unit[0], z_axis.position / (float)steps_per_unit[2], y_axis.position / (float)steps_per_unit[1] * -1.0f, extruder0.position  / (float)steps_per_unit[3]});
 }
 
 using millisec = std::chrono::duration<float, std::milli>;
@@ -504,23 +438,46 @@ void Visualisation::ui_viewport_callback(UiWindow* window) {
   }
 
   if (viewport.focused) {
-    if(ImGui::IsKeyDown(SDL_SCANCODE_W)) {
+    if (ImGui::IsKeyDown(SDL_SCANCODE_W)) {
       camera.position += camera.speed * camera.direction * delta;
     }
-    if(ImGui::IsKeyDown(SDL_SCANCODE_S)) {
+    if (ImGui::IsKeyDown(SDL_SCANCODE_S)) {
       camera.position -= camera.speed * camera.direction * delta;
     }
-    if(ImGui::IsKeyDown(SDL_SCANCODE_A)) {
+    if (ImGui::IsKeyDown(SDL_SCANCODE_A)) {
       camera.position -= glm::normalize(glm::cross(camera.direction, camera.up)) * camera.speed * delta;
     }
-    if(ImGui::IsKeyDown(SDL_SCANCODE_D)) {
+    if (ImGui::IsKeyDown(SDL_SCANCODE_D)) {
       camera.position += glm::normalize(glm::cross(camera.direction, camera.up)) * camera.speed * delta;
     }
-    if(ImGui::IsKeyDown(SDL_SCANCODE_SPACE)) {
+    if (ImGui::IsKeyDown(SDL_SCANCODE_SPACE)) {
       camera.position += camera.world_up * camera.speed * delta;
     }
-    if(ImGui::IsKeyDown(SDL_SCANCODE_LSHIFT)) {
+    if (ImGui::IsKeyDown(SDL_SCANCODE_LSHIFT)) {
       camera.position -= camera.world_up * camera.speed * delta;
+    }
+    if (ImGui::IsKeyPressed(SDL_SCANCODE_F)) {
+      follow_mode = follow_mode == 1? 0 : 1;
+      if (follow_mode) {
+        camera.position = glm::vec3(effector_pos.x, effector_pos.y + 10.0, effector_pos.z);
+        camera.rotation.y = -89.99999;
+      }
+    }
+    if (ImGui::IsKeyPressed(SDL_SCANCODE_G)) {
+      follow_mode = follow_mode == 2? 0 : 2;
+      if (follow_mode) {
+        follow_offset = camera.position - glm::vec3(effector_pos);
+      }
+    }
+    if (ImGui::IsKeyPressed(SDL_SCANCODE_F1)) {
+      render_full_path = !render_full_path;
+    }
+    if (ImGui::IsKeyPressed(SDL_SCANCODE_F2)) {
+      render_path_line = !render_path_line;
+    }
+
+    if (ImGui::GetIO().MouseWheel != 0 && viewport.hovered) {
+      camera.position += camera.speed * camera.direction * delta * ImGui::GetIO().MouseWheel;
     }
   }
 
@@ -541,27 +498,107 @@ void Visualisation::ui_viewport_callback(UiWindow* window) {
     SDL_SetWindowGrab(SDL_GL_GetCurrentWindow(), SDL_FALSE);
     SDL_WarpMouseInWindow(SDL_GL_GetCurrentWindow(), mouse_lock_pos.x, mouse_lock_pos.y);
   } else if (mouse_captured) {
-    if(ImGui::IsMouseDragging(0)) {
-      camera.rotation.x -= ImGui::GetIO().MouseDelta.x * 0.2;
-      camera.rotation.y -= ImGui::GetIO().MouseDelta.y * 0.2;
-      if (camera.rotation.y > 89.0f) camera.rotation.y = 89.0f;
-      else if (camera.rotation.y < -89.0f) camera.rotation.y = -89.0f;
-    }
+    camera.rotation.x -= ImGui::GetIO().MouseDelta.x * 0.2;
+    camera.rotation.y -= ImGui::GetIO().MouseDelta.y * 0.2;
+    if (camera.rotation.y > 89.0f) camera.rotation.y = 89.0f;
+    else if (camera.rotation.y < -89.0f) camera.rotation.y = -89.0f;
   }
 };
 
+
+// Test graph
+
+struct ScrollingData {
+    int MaxSize;
+    int Offset;
+    ImVector<ImPlotPoint> Data;
+    ScrollingData() {
+        MaxSize = 2000;
+        Offset  = 0;
+        Data.reserve(MaxSize);
+    }
+    void AddPoint(float x, float y) {
+        if (Data.size() < MaxSize)
+            Data.push_back(ImPlotPoint(x,y));
+        else {
+            Data[Offset] = ImPlotPoint(x,y);
+            Offset =  (Offset + 1) % MaxSize;
+        }
+    }
+    void Erase() {
+        if (Data.size() > 0) {
+            Data.shrink(0);
+            Offset  = 0;
+        }
+    }
+};
+
 void Visualisation::ui_info_callback(UiWindow*) {
-  ImGui::SliderFloat("sim speed 100", &kernel.realtime_scale, 0.0f, 100.0f);
-  ImGui::SliderFloat("sim speed 10", &kernel.realtime_scale, 0.0f, 10.0f);
-  ImGui::SliderFloat("sim speed 1", &kernel.realtime_scale, 0.0f, 1.0f);
-  ImGui::SliderFloat("sim speed 0.1", &kernel.realtime_scale, 0.0f, 0.1f);
-  uint64_t hours = (kernel.realtime_nanos / (Kernel::ONE_BILLION * 60 * 60)) ;
-  uint64_t remainder = (kernel.realtime_nanos % (Kernel::ONE_BILLION * 60 * 60));
+  if (kernel.timing_mode == Kernel::TimingMode::ISRSTEP) {
+    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+  }
+  ui_realtime_scale = kernel.realtime_scale.load();
+  ImGui::SliderFloat("sim speed 100", &ui_realtime_scale, 0.0f, 100.0f);
+  ImGui::SliderFloat("sim speed 10", &ui_realtime_scale, 0.0f, 10.0f);
+  ImGui::SliderFloat("sim speed 1", &ui_realtime_scale, 0.0f, 1.0f);
+  ImGui::SliderFloat("sim speed 0.1", &ui_realtime_scale, 0.0f, 0.1f);
+  kernel.realtime_scale.store(ui_realtime_scale);
+  if (kernel.timing_mode == Kernel::TimingMode::ISRSTEP) {
+    ImGui::PopItemFlag();
+    ImGui::PopStyleVar();
+  }
+
+  uint64_t time_source = kernel.ticksToNanos(kernel.getTicks());
+  uint64_t hours = (time_source / (Kernel::ONE_BILLION * 60 * 60)) ;
+  uint64_t remainder = (time_source % (Kernel::ONE_BILLION * 60 * 60));
   uint64_t mins = (remainder / (Kernel::ONE_BILLION * 60));
   remainder = (remainder % (Kernel::ONE_BILLION * 60));
   uint64_t seconds = remainder / (Kernel::ONE_BILLION);
   remainder = remainder % (Kernel::ONE_BILLION);
   ImGui::Text("%02ld:%02ld:%02ld.%ld", hours, mins, seconds, remainder);
+  ImGui::Text("ISR timing error: %ldns", kernel.isr_timing_error.load());
+
+
+  // lock the toggle button until the mode has been changed as it may be blocked
+  bool disabled_toggle = kernel.timing_mode != kernel.timing_mode_toggle;
+  if (disabled_toggle) {
+    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+  }
+  ImGui::Checkbox("Disable Realtime Mode ", (bool*)&kernel.timing_mode_toggle);
+  if (disabled_toggle) {
+    ImGui::PopItemFlag();
+    ImGui::PopStyleVar();
+  }
+
+
+  static bool paused = false;
+  static ScrollingData sdata1, sdata2;
+  //static RollingData   rdata1, rdata2;
+  static float t = 0.0;
+  if (!paused) {
+      t += ImGui::GetIO().DeltaTime;
+      sdata1.AddPoint(t, kernel.isr_timing_error.load());
+      //rdata1.AddPoint(t, mouse.x * 0.0005f);
+      //sdata2.AddPoint(t, kernel.realtime_scale.load());
+      //rdata2.AddPoint(t, mouse.y * 0.0005f);
+  }
+  static float history = 10.0f;
+  ImGui::SliderFloat("History",&history,1,30,"%.1f s");
+  // rdata1.Span = history;
+  // rdata2.Span = history;
+  ImPlot::SetNextPlotLimitsX(t - history, t, paused ? ImGuiCond_Once : ImGuiCond_Always);
+  static int rt_axis = ImPlotAxisFlags_Default | ImPlotAxisFlags_LockMin;
+  if (ImPlot::BeginPlot("##Scrolling", NULL, NULL, ImVec2(-1,150), ImPlotFlags_Default, rt_axis & ~ImPlotAxisFlags_TickLabels, rt_axis)) {
+      ImPlot::PlotLine("ISR Timing Error (ns)", &sdata1.Data[0].x, &sdata1.Data[0].y, sdata1.Data.size(), sdata1.Offset, sizeof(ImPlotPoint));
+      //ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
+      //ImPlot::PlotShaded("Data 2", &sdata2.Data[0].x, &sdata2.Data[0].y, sdata2.Data.size(), 0, sdata2.Offset, sizeof(ImPlotPoint));
+      //ImPlot::PopStyleVar();
+      ImPlot::EndPlot();
+  }
+  ImGui::Text("Double left click to autoscale, right click contect menu");
+
 }
 
 #endif
