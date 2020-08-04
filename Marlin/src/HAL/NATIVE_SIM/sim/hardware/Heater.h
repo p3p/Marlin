@@ -25,6 +25,26 @@
 
 #include "Gpio.h"
 
+/**
+ * data structures for future generalisation
+ **/
+
+struct enclosure_data {
+  double temperature;
+};
+
+struct heater_data {
+  double voltage, reistance;
+};
+
+struct hotend_data {
+  double mass, surface_area, specific_heat;
+};
+
+struct adc_data {
+  double pullup_resistance;
+  uint8_t resolution;
+};
 
 class Heater: public Peripheral {
 public:

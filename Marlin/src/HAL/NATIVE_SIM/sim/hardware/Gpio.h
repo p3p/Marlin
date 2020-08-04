@@ -24,6 +24,7 @@
 #include <cstdint>
 #include <atomic>
 #include <functional>
+#include <vector>
 
 #include "../execution_control.h"
 #include "src/inc/MarlinConfigPre.h"
@@ -84,14 +85,14 @@ struct pin_data {
   };
   template<class... Args>
   bool attach(Args... args) {
-    callback = std::function<void(GpioEvent&)>(args...);
+    callbacks.push_back(std::function<void(GpioEvent&)>(args...));
     return true;
   }
   std::atomic_uint8_t pull;
   std::atomic_uint8_t dir;
   std::atomic_uint8_t mode;
   std::atomic_uint16_t value;
-  std::function<void(GpioEvent&)> callback;
+  std::vector<std::function<void(GpioEvent&)>> callbacks;
 };
 
 class Gpio {
@@ -113,17 +114,13 @@ public:
     GpioEvent::Type evt_type = value > 1 ? GpioEvent::SET_VALUE : value > pin_map[pin].value ? GpioEvent::RISE : value < pin_map[pin].value ? GpioEvent::FALL : GpioEvent::NOP;
     pin_map[pin].value = value;
     GpioEvent evt(kernel.getTicks(), pin, evt_type);
-    if (pin_map[pin].callback) {
-      pin_map[pin].callback(evt);
-    }
+    for (auto callback : pin_map[pin].callbacks) callback(evt);
   }
 
   static uint16_t get(pin_type pin) {
     if (!valid_pin(pin)) return 0;
     GpioEvent evt(kernel.getTicks(), pin, GpioEvent::GET_VALUE);
-    if (pin_map[pin].callback) {
-      pin_map[pin].callback(evt);
-    }
+    for (auto callback : pin_map[pin].callbacks) callback(evt);
     return pin_map[pin].value;
   }
 
@@ -154,7 +151,7 @@ public:
     if (!valid_pin(pin)) return;
     pin_map[pin].dir = value;
     GpioEvent evt(kernel.getTicks(), pin, GpioEvent::Type::SETD);
-    if (pin_map[pin].callback) pin_map[pin].callback(evt);
+    for (auto callback : pin_map[pin].callbacks) callback(evt);
   }
 
   static uint8_t getDir(pin_type pin) {

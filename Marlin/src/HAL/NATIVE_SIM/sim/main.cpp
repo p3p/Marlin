@@ -45,7 +45,12 @@ void marlin_main() {
   HAL_timer_init();
   kernel.threads[0].timer_enabled = true;
   while(!main_finished) {
-    kernel.execute_loop();
+    try {
+      kernel.execute_loop();
+    } catch (std::runtime_error& e) {
+      // stack unrolled by exception in order to exit cleanly
+      // todo: use a custom exception
+    }
     std::this_thread::yield();
   }
 }
@@ -63,6 +68,7 @@ int main(int, char**) {
   }
 
   main_finished = true;
+  kernel.quit_requested = true;
   marlin_loop.join();
 
   return 0;

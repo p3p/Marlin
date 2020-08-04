@@ -121,6 +121,8 @@ public:
   bool timing_mode_toggle = false;
   bool timing_mode_toggle_last = false;
 
+  bool quit_requested = false;
+
 
   TimingMode timing_mode = TimingMode::REALTIME_SCALED;
   std::chrono::high_resolution_clock clock;

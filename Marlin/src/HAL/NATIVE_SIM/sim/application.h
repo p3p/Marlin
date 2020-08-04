@@ -7,6 +7,7 @@
 
 #include "hardware/Heater.h"
 #include "hardware/ST7920Device.h"
+#include "hardware/print_bed.h"
 
 #include "visualisation.h"
 
@@ -42,14 +43,14 @@ class Simulation {
 public:
 
   Simulation() :  hotend(HEATER_0_PIN, TEMP_0_PIN),
-                  bed(HEATER_BED_PIN, TEMP_BED_PIN),
+                  bed_heater(HEATER_BED_PIN, TEMP_BED_PIN),
                   display(LCD_PINS_D4, LCD_PINS_ENABLE, LCD_PINS_RS, BEEPER_PIN, BTN_EN1, BTN_EN2, BTN_ENC, KILL_PIN) {}
 
   void process_event(SDL_Event& e) {}
 
   void update() {
     hotend.update();
-    bed.update();
+    bed_heater.update();
     display.update();
   }
 
@@ -58,7 +59,7 @@ public:
   }
 
   Heater hotend;
-  Heater bed;
+  Heater bed_heater;
   ST7920Device display;
   Visualisation vis;
 };
