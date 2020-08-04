@@ -57,7 +57,7 @@
 
 #include "../../../inc/MarlinConfig.h"
 
-#if HAS_GRAPHICAL_LCD && DISABLED(U8GLIB_ST7920)
+#if HAS_MARLINUI_U8GLIB && DISABLED(U8GLIB_ST7920)
 
 #undef SPI_SPEED
 #define SPI_SPEED 2  // About 2 MHz
@@ -211,5 +211,5 @@ uint8_t u8g_com_sw_spi_fn(u8g_t *u8g, uint8_t msg, uint8_t arg_val, void *arg_pt
 #else
   #include <U8glib.h>
   uint8_t u8g_com_sw_spi_fn(u8g_t *u8g, uint8_t msg, uint8_t arg_val, void *arg_ptr) {return 0;}
-#endif // HAS_GRAPHICAL_LCD && !U8GLIB_ST7920
+#endif // HAS_MARLINUI_U8GLIB && !U8GLIB_ST7920
 #endif // __PLAT_NATIVE_SIM__
