@@ -8,6 +8,9 @@
 bool Kernel::execute_loop( uint64_t max_end_ticks) {
   //todo: investigate dataloss when pulling from SerialMonitor rather than pushing from here
 
+  // Marlin often gets into reentrant loops, this is the only way to unroll out of that call stack early
+  if (quit_requested) throw (std::runtime_error("Quit Requested"));
+
   if (usb_serial.transmit_buffer.available()) {
     char buffer[usb_serial.transmit_buffer_size];
     auto count = usb_serial.transmit_buffer.read((uint8_t *)buffer, usb_serial.transmit_buffer_size - 1);

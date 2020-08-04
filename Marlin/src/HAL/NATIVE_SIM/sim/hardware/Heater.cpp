@@ -50,8 +50,8 @@ Heater::Heater(pin_t heater, pin_t adc) {
   heater_pin = heater;
   adc_pin = analogInputToDigitalPin(adc);
 
-  Gpio::attach(adc_pin, std::bind(&Heater::interrupt, this, std::placeholders::_1));
-  Gpio::attach(heater_pin, std::bind(&Heater::interrupt, this, std::placeholders::_1));
+  Gpio::attach(adc_pin, [this](GpioEvent& event){ this->interrupt(event); });
+  Gpio::attach(heater_pin, [this](GpioEvent& event){ this->interrupt(event); });
   hotend_energy = hotend_ambient_temperature * (hotend_specific_heat * hotend_mass);
   hotend_temperature = hotend_ambient_temperature;
 }

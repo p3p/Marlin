@@ -26,19 +26,21 @@ Visualisation::Visualisation() :
   x_axis(X_ENABLE_PIN, X_DIR_PIN, X_STEP_PIN, X_MIN_PIN, X_MAX_PIN, INVERT_X_DIR),
   y_axis(Y_ENABLE_PIN, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN, INVERT_Y_DIR),
   z_axis(Z_ENABLE_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN, INVERT_Z_DIR),
-  extruder0(E0_ENABLE_PIN, E0_DIR_PIN, E0_STEP_PIN, P_NC, P_NC, INVERT_E0_DIR) {
-    Gpio::attach(x_axis.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); }); //todo this works too
-    Gpio::attach(x_axis.min_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
-    Gpio::attach(x_axis.max_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
-    Gpio::attach(y_axis.step_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
-    Gpio::attach(y_axis.min_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
-    Gpio::attach(y_axis.max_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
-    Gpio::attach(z_axis.step_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
-    Gpio::attach(z_axis.min_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
-    Gpio::attach(z_axis.max_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
-    Gpio::attach(extruder0.step_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
-    Gpio::attach(extruder0.min_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
-    Gpio::attach(extruder0.max_pin, std::bind(&Visualisation::gpio_event_handler, this, std::placeholders::_1));
+  extruder0(E0_ENABLE_PIN, E0_DIR_PIN, E0_STEP_PIN, P_NC, P_NC, INVERT_E0_DIR),
+  print_bed({X_BED_SIZE, Y_BED_SIZE}),
+  probe(pin_type(Z_MIN_PROBE_PIN), NOZZLE_TO_PROBE_OFFSET, effector_pos, print_bed) {
+    Gpio::attach(x_axis.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+    Gpio::attach(x_axis.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+    Gpio::attach(x_axis.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+    Gpio::attach(y_axis.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+    Gpio::attach(y_axis.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+    Gpio::attach(y_axis.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+    Gpio::attach(z_axis.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+    Gpio::attach(z_axis.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+    Gpio::attach(z_axis.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+    Gpio::attach(extruder0.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+    Gpio::attach(extruder0.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+    Gpio::attach(extruder0.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
   }
 
 Visualisation::~Visualisation() {
@@ -271,6 +273,8 @@ void Visualisation::create() {
 
   camera = { {37.0f, 121.0f, 129.0f}, {-192.0f, -25.0, 0.0f}, {0.0f, 1.0f, 0.0f}, float(100) / float(100), glm::radians(45.0f), 0.1f, 1000.0f};
   camera.generate();
+
+  print_bed.build_3point(bed_level_point[0], bed_level_point[1], bed_level_point[2]);
 }
 
 void Visualisation::process_event(SDL_Event& e) {
@@ -305,6 +309,14 @@ void Visualisation::update() {
 
   glm::mat4 mvp = camera.proj * camera.view * model_matrix;
 
+  // todo: move vertex generation
+  g_vertex_buffer_data[(18 * 10) + 1] = print_bed.calculate_z({g_vertex_buffer_data[(18 * 10) + 0], -g_vertex_buffer_data[(18 * 10) + 2]}); // invert y (opengl Z) for opengl
+  g_vertex_buffer_data[(19 * 10) + 1] = print_bed.calculate_z({g_vertex_buffer_data[(19 * 10) + 0], -g_vertex_buffer_data[(19 * 10) + 2]});
+  g_vertex_buffer_data[(20 * 10) + 1] = print_bed.calculate_z({g_vertex_buffer_data[(20 * 10) + 0], -g_vertex_buffer_data[(20 * 10) + 2]});
+  g_vertex_buffer_data[(21 * 10) + 1] = print_bed.calculate_z({g_vertex_buffer_data[(21 * 10) + 0], -g_vertex_buffer_data[(21 * 10) + 2]});
+  g_vertex_buffer_data[(22 * 10) + 1] = print_bed.calculate_z({g_vertex_buffer_data[(22 * 10) + 0], -g_vertex_buffer_data[(22 * 10) + 2]});
+  g_vertex_buffer_data[(23 * 10) + 1] = print_bed.calculate_z({g_vertex_buffer_data[(23 * 10) + 0], -g_vertex_buffer_data[(23 * 10) + 2]});
+
   glUseProgram( program );
   glUniformMatrix4fv( glGetUniformLocation( program, "u_mvp" ), 1, GL_FALSE, glm::value_ptr(mvp));
   glBindVertexArray( vao );
@@ -313,8 +325,9 @@ void Visualisation::update() {
   if(follow_mode != 1) {
     glDrawArrays( GL_TRIANGLES, 0, 18 );
   }
-  glm::mat4 bed_matrix = glm::translate(glm::scale(glm::mat4(1.0f), {200.0f, 0.0f, 200.0f}), {0.5f, 0.0, -0.5f});
-  mvp = camera.proj * camera.view * bed_matrix;
+  // glm::mat4 bed_matrix = glm::translate(glm::scale(glm::mat4(1.0f), {200.0f, 0.0f, 200.0f}), {0.5f, 0.0, -0.5f});
+  // mvp = camera.proj * camera.view * bed_matrix;
+  mvp = camera.proj * camera.view;
   glUniformMatrix4fv( glGetUniformLocation( program, "u_mvp" ), 1, GL_FALSE, glm::value_ptr(mvp));
   glDrawArrays( GL_TRIANGLES, 18, 24);
 
@@ -595,8 +608,13 @@ void Visualisation::ui_info_callback(UiWindow*) {
       //ImPlot::PopStyleVar();
       ImPlot::EndPlot();
   }
-  ImGui::Text("Double left click to autoscale, right click contect menu");
-
+  ImGui::Text("Double left click to autoscale, double right click context menu");
+  ImGui::Separator();
+  ImGui::SliderFloat("bed level(back centre)", &bed_level_point[0].z, -5.0f, 5.0f);
+  ImGui::SliderFloat("bed level(front left)", &bed_level_point[1].z, -5.0f, 5.0f);
+  ImGui::SliderFloat("bed level(front right)", &bed_level_point[2].z, -5.0f, 5.0f);
+  print_bed.build_3point(bed_level_point[0], bed_level_point[1], bed_level_point[2]);
+  ImGui::Separator();
 }
 
 #endif

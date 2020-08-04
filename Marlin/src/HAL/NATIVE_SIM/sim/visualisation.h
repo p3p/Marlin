@@ -4,6 +4,8 @@
 #include <array>
 
 #include "hardware/LinearAxis.h"
+#include "hardware/print_bed.h"
+#include "hardware/bed_probe.h"
 
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
@@ -165,6 +167,9 @@ public:
   LinearAxis y_axis;
   LinearAxis z_axis;
   LinearAxis extruder0;
+  PrintBed print_bed;
+  glm::vec3 bed_level_point[3] = {{100,200,0},{0,0,0},{200,0,0}};
+  BedProbe probe;
 
   float ui_realtime_scale = 0.0f;
 
@@ -203,7 +208,7 @@ public:
   bool input_state[6] = {};
   glm::vec<2, int> mouse_lock_pos;
 
-  const std::array<GLfloat, 24 * 10> g_vertex_buffer_data{
+  std::array<GLfloat, 24 * 10> g_vertex_buffer_data{
       //end effector
       0, 0, 0, 0.0, 0.0, 0.0, 1, 0, 0, 1,
       -0.5, 0.5, 0.5, 0.0, 0.0, 0.0, 0, 1, 0, 1,
@@ -230,13 +235,13 @@ public:
        0.5, 0.5, 0.5, 0.0, 0.0, 0.0, 0, 0, 1, 1,
 
       // bed
-      0.5, 0, -0.5, 0.0, 1.0, 0.0, 0.5, 0.5, 0.5, 1,
-      -0.5, 0, -0.5, 0.0, 1.0, 0.0, 0.5, 0.5, 0.5, 1,
-      -0.5, 0, 0.5, 0.0, 1.0, 0.0, 0.5, 0.5, 0.5, 1,
+      200, 0, -200, 0.0, 1.0, 0.0,  0.5, 0.5, 0.5, 1,
+      0, 0, -200, 0.0, 1.0, 0.0,  0.5, 0.5, 0.5, 1,
+      0, 0, 0, 0.0, 1.0, 0.0,  0.5, 0.5, 0.5, 1,
 
-      0.5, 0, -0.5, 0.0, 1.0, 0.0, 0.5, 0.5, 0.5, 1,
-      -0.5, 0, 0.5, 0.0, 1.0, 0.0, 0.5, 0.5, 0.5, 1,
-      0.5, 0, 0.5, 0.0, 1.0, 0.0, 0.5, 0.5, 0.5, 1,
+      200, 0, -200, 0.0, 1.0, 0.0, 0.5, 0.5, 0.5, 1,
+      0, 0, 0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.5, 1,
+      200, 0, 0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.5, 1,
   };
 
 

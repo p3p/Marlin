@@ -11,9 +11,9 @@ Application::Application() {
   sim.vis.create();
 
   user_interface.addElement<SerialMonitor>("Serial Monitor");
-  user_interface.addElement<TextureWindow>("Controller Display", sim.display.texture_id, 128.0 / 64.0, std::bind(&ST7920Device::ui_callback, &sim.display, std::placeholders::_1));
-  user_interface.addElement<StatusWindow>("Status", &clear_color, std::bind(&Visualisation::ui_info_callback, &sim.vis, std::placeholders::_1));
-  user_interface.addElement<Viewport>("Viewport", std::bind(&Visualisation::ui_viewport_callback, &sim.vis, std::placeholders::_1));
+  user_interface.addElement<TextureWindow>("Controller Display", sim.display.texture_id, 128.0 / 64.0, [this](UiWindow* window){ this->sim.display.ui_callback(window); });
+  user_interface.addElement<StatusWindow>("Status", &clear_color, [this](UiWindow* window){ this->sim.vis.ui_info_callback(window); });
+  user_interface.addElement<Viewport>("Viewport", [this](UiWindow* window){ this->sim.vis.ui_viewport_callback(window); });
   //user_interface.addElement<GraphWindow>("graphs", sim.display.texture_id, 128.0 / 64.0, std::bind(&Simulation::ui_callback, &sim, std::placeholders::_1));
 }
 
@@ -22,9 +22,6 @@ Application::~Application() {
 }
 
 void Application::update() {
-  auto viewport = std::dynamic_pointer_cast<Viewport>(user_interface.ui_elements["Viewport"]); // can get ui elemts by name
-  auto display = std::dynamic_pointer_cast<TextureWindow>(user_interface.ui_elements["Controller Display"]); // can get ui elemts by name
-
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     ImGui_ImplSDL2_ProcessEvent(&event);

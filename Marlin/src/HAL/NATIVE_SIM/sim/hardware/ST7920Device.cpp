@@ -14,13 +14,13 @@
 ST7920Device::ST7920Device(pin_type clk, pin_type mosi, pin_type cs,  pin_type beeper, pin_type enc1, pin_type enc2, pin_type enc_but, pin_type kill)
   : clk_pin(clk), mosi_pin(mosi), cs_pin(cs), beeper_pin(beeper), enc1_pin(enc1), enc2_pin(enc2), enc_but_pin(enc_but), kill_pin(kill) {
 
-  Gpio::attach(clk_pin, std::bind(&ST7920Device::interrupt, this, std::placeholders::_1));
-  Gpio::attach(cs_pin, std::bind(&ST7920Device::interrupt, this, std::placeholders::_1));
-  Gpio::attach(beeper_pin, std::bind(&ST7920Device::interrupt, this, std::placeholders::_1));
-  Gpio::attach(kill_pin, std::bind(&ST7920Device::interrupt, this, std::placeholders::_1));
-  Gpio::attach(enc_but_pin, std::bind(&ST7920Device::interrupt, this, std::placeholders::_1));
-  Gpio::attach(enc1_pin, std::bind(&ST7920Device::interrupt, this, std::placeholders::_1));
-  Gpio::attach(enc2_pin, std::bind(&ST7920Device::interrupt, this, std::placeholders::_1));
+  Gpio::attach(clk_pin, [this](GpioEvent& event){ this->interrupt(event); });
+  Gpio::attach(cs_pin, [this](GpioEvent& event){ this->interrupt(event); });
+  Gpio::attach(beeper_pin, [this](GpioEvent& event){ this->interrupt(event); });
+  Gpio::attach(kill_pin, [this](GpioEvent& event){ this->interrupt(event); });
+  Gpio::attach(enc_but_pin, [this](GpioEvent& event){ this->interrupt(event); });
+  Gpio::attach(enc1_pin, [this](GpioEvent& event){ this->interrupt(event); });
+  Gpio::attach(enc2_pin, [this](GpioEvent& event){ this->interrupt(event); });
 
   glGenTextures(1, &texture_id);
   glBindTexture(GL_TEXTURE_2D, texture_id);
@@ -162,10 +162,10 @@ void ST7920Device::ui_callback(UiWindow* window) {
   if (ImGui::IsWindowFocused()) {
     key_pressed[KeyName::KILL_BUTTON] = ImGui::IsKeyDown(SDL_SCANCODE_K);
     key_pressed[KeyName::ENCODER_BUTTON] = ImGui::IsKeyDown(SDL_SCANCODE_SPACE);
-    encoder_position -= ImGui::IsKeyDown(SDL_SCANCODE_UP);
-    encoder_position += ImGui::IsKeyDown(SDL_SCANCODE_DOWN);
+    encoder_position += ImGui::IsKeyDown(SDL_SCANCODE_UP);
+    encoder_position -= ImGui::IsKeyDown(SDL_SCANCODE_DOWN);
     if (ImGui::IsWindowHovered()) {
-      key_pressed[KeyName::ENCODER_BUTTON] = ImGui::IsMouseClicked(0);
+      key_pressed[KeyName::ENCODER_BUTTON] = (ImGui::IsMouseClicked(0) | ImGui::IsKeyDown(SDL_SCANCODE_SPACE));
       encoder_position += ImGui::GetIO().MouseWheel > 0 ? 1 : ImGui::GetIO().MouseWheel < 0 ? -1 : 0;
     }
   }
