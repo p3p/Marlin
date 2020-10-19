@@ -44,6 +44,7 @@ void marlin_main() {
   //kernel.setFrequency(F_CPU);
   HAL_timer_init();
   kernel.threads[0].timer_enabled = true;
+  kernel.initialised = true;
   while(!main_finished) {
     try {
       kernel.execute_loop();
