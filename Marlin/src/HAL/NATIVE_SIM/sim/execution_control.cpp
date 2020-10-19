@@ -3,6 +3,7 @@
 #include "user_interface.h"
 #include "execution_control.h"
 
+bool Kernel::initialised = false;
 
 //execute highest priority thread with closest interrupt, return true if something was executed
 bool Kernel::execute_loop( uint64_t max_end_ticks) {
@@ -119,7 +120,7 @@ void Kernel::delayCycles(uint64_t cycles) {
   if (timing_mode == TimingMode::ISRSTEP) {
     while (execute_loop(end) && getTicks() < end);
     if (end > getTicks()) setTicks(end);
-  } else {
+  } else if (kernel.initialised) {
     while ( getTicks() < end) execute_loop();
   }
 }

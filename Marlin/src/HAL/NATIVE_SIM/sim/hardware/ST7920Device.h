@@ -57,8 +57,8 @@ public:
   static constexpr int8_t encoder_table[4] = {1, 3, 2, 0};
 
   bool dirty = true;
-  std::chrono::high_resolution_clock clock;
-  std::chrono::high_resolution_clock::time_point last_update;
+  std::chrono::steady_clock clock;
+  std::chrono::steady_clock::time_point last_update;
   float scaler;
   GLuint texture_id;
 

@@ -35,15 +35,15 @@ public:
   }
 
   void execute() {
-    if (!initilised) {
-      initilised = true;
+    if (!initialised) {
+      initialised = true;
       thread_init();
     } else {
       thread_loop();
     }
   }
 
-  bool initilised = false;
+  bool initialised = false;
   bool timer_enabled = false;
 
   std::uint64_t timer_rate{0};
@@ -125,8 +125,8 @@ public:
 
 
   TimingMode timing_mode = TimingMode::REALTIME_SCALED;
-  std::chrono::high_resolution_clock clock;
-  std::chrono::high_resolution_clock::time_point last_clock_read;
+  std::chrono::steady_clock clock;
+  std::chrono::steady_clock::time_point last_clock_read;
   std::atomic_uint64_t isr_timing_error = 0;
 
   inline void updateRealtimeTicks() {
@@ -294,6 +294,7 @@ public:
   std::atomic_uint64_t ticks{0};
   uint64_t realtime_nanos = 0;
   static constexpr uint32_t frequency = 100'000'000;
+  static bool initialised;
 };
 
 extern Kernel kernel;

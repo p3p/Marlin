@@ -192,8 +192,8 @@ public:
   bool render_full_path = true;
   bool render_path_line = false;
   glm::vec3 follow_offset = {0.0f, 0.0f, 0.0f};
-  std::chrono::high_resolution_clock clock;
-  std::chrono::high_resolution_clock::time_point last_update;
+  std::chrono::steady_clock clock;
+  std::chrono::steady_clock::time_point last_update;
   glm::vec4 effector_pos = {};
   glm::vec3 effector_scale = {3.0f ,10.0f, 3.0f};
 
