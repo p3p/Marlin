@@ -86,11 +86,17 @@ struct KernelTimer {
     this->name = name;
   }
   void execute() {
-    isr_function();
+    if (!isr_active)
+    {
+      isr_active = true;
+      isr_function();
+      isr_active = false;
+    }
   }
 
   std::string name;
   bool active = false;
+  bool isr_active = false;
   uint64_t compare = 0, source_offset = 0, timer_frequency = 0;
   std::function<void()> isr_function;
 };
