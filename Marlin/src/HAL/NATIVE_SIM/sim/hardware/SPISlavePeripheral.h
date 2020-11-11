@@ -30,6 +30,7 @@ public:
   void setRequestedDataSize(uint8_t token, size_t _count);
 
   uint8_t getCurrentToken() { return currentToken; }
+  void clearCurrentToken() { currentToken = 0xFF; }
 
 protected:
   void transmitCurrentBit();

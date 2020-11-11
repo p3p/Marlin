@@ -395,9 +395,9 @@
 
 #if ANY(TFT_COLOR_UI, TFT_CLASSIC_UI, TFT_LVGL_UI)
 
-  #define TFT_A0_PIN            44
+  #define TFT_A0_PIN            43
   #define TFT_CS_PIN            49
-  #define TFT_DC_PIN            44
+  #define TFT_DC_PIN            43
   #define TFT_SCK_PIN           SCK_PIN
   #define TFT_MOSI_PIN          MOSI_PIN
   #define LCD_USE_DMA_SPI
@@ -420,6 +420,20 @@
   #endif
 
   #define TFT_BUFFER_SIZE             0xFFFF
+  #define TFT_DRIVER                  ST7796
+
+  #ifndef XPT2046_X_CALIBRATION
+    #define XPT2046_X_CALIBRATION      63934
+  #endif
+  #ifndef XPT2046_Y_CALIBRATION
+    #define XPT2046_Y_CALIBRATION      63598
+  #endif
+  #ifndef XPT2046_X_OFFSET
+    #define XPT2046_X_OFFSET              -1
+  #endif
+  #ifndef XPT2046_Y_OFFSET
+    #define XPT2046_Y_OFFSET             -20
+  #endif
 
 #elif HAS_WIRED_LCD
 
