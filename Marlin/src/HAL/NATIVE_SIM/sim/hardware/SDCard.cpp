@@ -18,6 +18,7 @@ void SDCard::onByteReceived(uint8_t _byte) {
           setResponse(R1_IDLE_STATE);
           if (fp) fclose(fp);
           fp = fopen(SD_SIMULATOR_FAT_IMAGE, "rb+");
+          if (fp == nullptr) throw(std::runtime_error("Unable to open sd card filesystem image"));
           break;
         case CMD8:
           if (true/*_type == SD_CARD_TYPE_SD1*/) {
