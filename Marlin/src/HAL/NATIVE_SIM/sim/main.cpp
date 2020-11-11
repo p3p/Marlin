@@ -51,6 +51,9 @@ void marlin_main() {
     } catch (std::runtime_error& e) {
       // stack unrolled by exception in order to exit cleanly
       // todo: use a custom exception
+      printf("Exception: %s\n", e.what());
+      printf("Marlin thread terminated\n");
+      main_finished = true;
     }
     std::this_thread::yield();
   }

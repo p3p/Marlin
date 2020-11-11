@@ -311,7 +311,8 @@ void serial_echopair_PGM(PGM_P const s_P, double v);
 inline void serial_echopair_PGM(PGM_P const s_P, uint8_t v) { serial_echopair_PGM(s_P, (int)v); }
 inline void serial_echopair_PGM(PGM_P const s_P, bool v)    { serial_echopair_PGM(s_P, (int)v); }
 inline void serial_echopair_PGM(PGM_P const s_P, void *v)   { serial_echopair_PGM(s_P, (uintptr_t)v); }
-inline void serial_echopair_PGM(PGM_P const s_P, size_t v)   { serial_echopair_PGM(s_P, (int)v); }
+//inline void serial_echopair_PGM(PGM_P const s_P, size_t v)   { serial_echopair_PGM(s_P, (long int)v); }
+#warning This REAAALY NEEDS FIXED , this will work on linux, reenable to work on windows, dont want to use any OS specific code ..
 
 void serialprintPGM(PGM_P str);
 void serial_echo_start();
