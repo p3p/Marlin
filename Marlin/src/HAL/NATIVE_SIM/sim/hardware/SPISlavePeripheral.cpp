@@ -10,7 +10,7 @@ SPISlavePeripheral::~SPISlavePeripheral() {};
 void SPISlavePeripheral::onBeginTransaction() {
   // printf("SPISlavePeripheral::onBeginTransaction\n");
   insideTransaction = true;
-  outgoing_byte = 0;
+  outgoing_byte = 0xFF;
   outgoing_bit_count = 0;
   if (CPHA == 0) {
     //when CPHA is 0: data must be available on MISO when CS fall
@@ -73,8 +73,9 @@ void SPISlavePeripheral::onByteSent(uint8_t _byte) {
     responseData++;
     responseDataSize--;
   }
-  else if (hasDataToSend) {
-    onResponseSent();
+  else {
+    if (hasDataToSend) onResponseSent();
+    outgoing_byte = 0xFF;
   }
   outgoing_bit_count = 0;
 }
