@@ -393,7 +393,35 @@
 // LCDs and Controllers //
 //////////////////////////
 
-#if HAS_WIRED_LCD
+#if ANY(TFT_COLOR_UI, TFT_CLASSIC_UI, TFT_LVGL_UI)
+
+  #define TFT_A0_PIN            44
+  #define TFT_CS_PIN            49
+  #define TFT_DC_PIN            44
+  #define TFT_SCK_PIN           SCK_PIN
+  #define TFT_MOSI_PIN          MOSI_PIN
+  #define LCD_USE_DMA_SPI
+
+  #define BTN_EN1                         40
+  #define BTN_EN2                         63
+  #define BTN_ENC                         59
+  #define BEEPER_PIN                      42
+
+  #define TOUCH_CS_PIN                    33
+
+  #define HAS_SPI_FLASH                    1
+  #if HAS_SPI_FLASH
+    #define SPI_DEVICE                     1
+    #define SPI_FLASH_SIZE         0x1000000  // 16MB
+    #define W25QXX_CS_PIN                 31
+    #define W25QXX_MOSI_PIN         MOSI_PIN
+    #define W25QXX_MISO_PIN         MISO_PIN
+    #define W25QXX_SCK_PIN           SCK_PIN
+  #endif
+
+  #define TFT_BUFFER_SIZE             0xFFFF
+
+#elif HAS_WIRED_LCD
 
   //
   // LCD Display output pins

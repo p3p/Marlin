@@ -78,4 +78,13 @@ void HAL_pwm_init() {
 
 }
 
+// Maple Compatibility
+volatile uint32_t systick_uptime_millis = 0;
+systickCallback_t systick_user_callback;
+void systick_attach_callback(systickCallback_t cb) { systick_user_callback = cb; }
+void SYSTICK_IRQHandler() {
+  systick_uptime_millis++;
+  if (systick_user_callback) systick_user_callback();
+}
+
 #endif // __PLAT_NATIVE_SIM__
