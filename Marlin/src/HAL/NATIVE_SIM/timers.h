@@ -46,6 +46,10 @@ typedef uint64_t hal_timer_t;
 #ifndef TEMP_TIMER_NUM
   #define TEMP_TIMER_NUM        1  // Timer Index for Temperature
 #endif
+#ifndef SYSTICK_TIMER_NUM
+  #define SYSTICK_TIMER_NUM     2 // Timer Index for Systick
+#endif
+#define SYSTICK_TIMER_FREQUENCY 1000
 
 #define TEMP_TIMER_RATE        1000000
 #define TEMP_TIMER_FREQUENCY   1000 // temperature interrupt frequency

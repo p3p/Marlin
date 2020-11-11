@@ -74,6 +74,10 @@ extern Kernel kernel;
 void HAL_timer_init() {
   kernel.timerInit(STEP_TIMER_NUM, STEPPER_TIMER_RATE);
   kernel.timerInit(TEMP_TIMER_NUM, TEMP_TIMER_RATE);
+  // Configure and start systick early
+  kernel.timerInit(SYSTICK_TIMER_NUM, HAL_TIMER_RATE);
+  HAL_timer_enable_interrupt(SYSTICK_TIMER_NUM);
+  HAL_timer_start(SYSTICK_TIMER_NUM, SYSTICK_TIMER_FREQUENCY);
 }
 
 void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {

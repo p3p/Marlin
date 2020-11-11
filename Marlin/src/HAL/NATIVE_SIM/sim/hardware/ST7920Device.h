@@ -27,6 +27,9 @@ public:
   void interrupt(GpioEvent& ev);
   void ui_callback(UiWindow* window);
 
+  static constexpr uint32_t width = 128;
+  static constexpr uint32_t height = 64;
+
   pin_type clk_pin, mosi_pin, cs_pin, beeper_pin, enc1_pin, enc2_pin, enc_but_pin, kill_pin;
 
   bool extended_instruction_set = false;

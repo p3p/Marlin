@@ -13,6 +13,7 @@ extern void setup();
 extern void loop();
 extern "C" void TIMER0_IRQHandler();
 extern "C" void TIMER1_IRQHandler();
+extern "C" void SYSTICK_IRQHandler();
 
 constexpr inline uint64_t tickConvertFrequency(std::uint64_t value, std::uint64_t from, std::uint64_t to) {
   return from > to ? value / (from / to) : value * (to / from);
@@ -105,14 +106,14 @@ public:
 
   // ordered highest priority first
   Kernel() : threads({KernelThread{"Marlin Loop", loop, setup}}),
-             timers({KernelTimer{"Stepper ISR", TIMER0_IRQHandler}, {"Temperate ISR", TIMER1_IRQHandler}}),
+             timers({KernelTimer{"Stepper ISR", TIMER0_IRQHandler}, {"Temperate ISR", TIMER1_IRQHandler}, {"SysTick", SYSTICK_IRQHandler}}),
              last_clock_read(clock.now()) {
     threads[0].timer_offset = getTicks();
     threads[0].timer_rate = 1000000;
     threads[0].timer_compare = 500;
   }
   std::array<KernelThread, 1> threads;
-  std::array<KernelTimer, 2> timers;
+  std::array<KernelTimer, 3> timers;
   //std::array<KernelTimer, N> gpio_interrupt;
 
   KernelThread* this_thread = nullptr;

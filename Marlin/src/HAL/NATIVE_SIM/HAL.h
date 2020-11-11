@@ -107,7 +107,7 @@ inline uint8_t HAL_get_reset_source(void) { return RST_POWER_ON; }
 #define DELAY_CYCLES(x) kernel.delayCycles(x)
 #define SYSTEM_YIELD() kernel.yield()
 
-// Add strcmp_P if missing
-#ifndef strcmp_P
-  #define strcmp_P(a, b) strcmp((a), (b))
-#endif
+// Maple Compatibility
+typedef void (*systickCallback_t)(void);
+void systick_attach_callback(systickCallback_t cb);
+extern volatile uint32_t systick_uptime_millis;
