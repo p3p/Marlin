@@ -42,10 +42,12 @@ void SDCard::onRequestedDataReceived(uint8_t token, uint8_t* _data, size_t count
   // printf("CMD: %d, currentArg: %d, crc: %d, count: %d\n", token, currentArg, crc, count);
   switch (token) {
     case CMD0:
-      setResponse(R1_IDLE_STATE);
       if (fp) fclose(fp);
       fp = fopen(SD_SIMULATOR_FAT_IMAGE, "rb+");
-      if (fp == nullptr) throw(std::runtime_error("Unable to open sd card filesystem image"));
+      if (fp)
+        setResponse(R1_IDLE_STATE);
+      else
+        setResponse(0);
       break;
     case CMD8:
       if (true/*_type == SD_CARD_TYPE_SD1*/) {
