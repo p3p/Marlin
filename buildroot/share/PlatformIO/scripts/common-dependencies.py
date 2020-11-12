@@ -225,6 +225,8 @@ def search_compiler():
 			return filepath
 
 	filepath = env.get('CXX')
+	if filepath == 'CC':
+		filepath = gcc
 	blab("Couldn't find a compiler! Fallback to %s" % filepath)
 	return filepath
 
