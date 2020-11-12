@@ -46,7 +46,7 @@ bool Kernel::execute_loop( uint64_t max_end_ticks) {
     KernelTimer* next_isr = nullptr;
     for (auto& timer : timers) {
       uint64_t value = timer.next_interrupt(frequency);
-      if (timers_active && value < lowest_isr && value < max_end_ticks && timer.enabled()) {
+      if (timers_active && value < lowest_isr && value < max_end_ticks && timer.enabled() && !timer.running) {
         lowest_isr = value;
         next_isr = &timer;
       }
@@ -56,7 +56,7 @@ bool Kernel::execute_loop( uint64_t max_end_ticks) {
     KernelThread* next = nullptr;
     for (auto& thread : threads) {
       uint64_t value = thread.next_interrupt(frequency);
-      if (timers_active && value < lowest && value < max_end_ticks && thread.timer_enabled && this_thread != &thread) {
+      if (timers_active && value < lowest && value < max_end_ticks && thread.timer_enabled && this_thread != &thread && !thread.running) {
         lowest = value;
         next = &thread;
       }
@@ -90,7 +90,7 @@ bool Kernel::execute_loop( uint64_t max_end_ticks) {
   } else {
 
     for (auto& timer : timers) {
-      if (timer.interrupt(current_ticks, frequency)) {
+      if (timer.interrupt(current_ticks, frequency) && !timer.running) {
         isr_timing_error = ticksToNanos(current_ticks - timer.next_interrupt(frequency));
         timer.source_offset = current_ticks;
         timer.execute();
@@ -99,7 +99,7 @@ bool Kernel::execute_loop( uint64_t max_end_ticks) {
     }
 
     for (auto& thread : threads) {
-      if (this_thread != &thread && thread.interrupt(current_ticks, frequency)) {
+      if (this_thread != &thread && thread.interrupt(current_ticks, frequency) && !thread.running) {
         thread.timer_offset = current_ticks;
         KernelThread* old_thread = this_thread;
         this_thread = &thread;
