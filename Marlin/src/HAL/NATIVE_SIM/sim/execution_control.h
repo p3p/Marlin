@@ -105,7 +105,6 @@ struct KernelTimer {
 class Kernel {
 public:
   enum TimingMode {
-    REALTIME_SCALED,
     ISRSTEP
     //REALTIME_SIGNAL
   };
@@ -125,18 +124,13 @@ public:
   KernelThread* this_thread = nullptr;
   std::vector<KernelThread*> call_stack;
   bool timers_active = true;
-  bool timing_mode_toggle = false;
-  bool timing_mode_toggle_last = false;
-
   bool quit_requested = false;
 
-
-  TimingMode timing_mode = TimingMode::REALTIME_SCALED;
   std::chrono::steady_clock clock;
   std::chrono::steady_clock::time_point last_clock_read;
   std::atomic_uint64_t isr_timing_error = 0;
 
-  inline void updateRealtimeTicks() {
+  inline void updateRealtime() {
     auto now = clock.now();
     auto delta = now - last_clock_read;
     uint64_t delta_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(delta).count();
@@ -150,8 +144,9 @@ public:
       last_clock_read = now;
       realtime_nanos += delta_uint64_scaled;
     }
-    ticks.store(nanosToTicks(realtime_nanos));
   }
+
+  inline uint64_t getRealtimeTicks() { return nanosToTicks(realtime_nanos); }
 
   //execute highest priority thread with closest interrupt, return true if something was executed
   bool execute_loop(uint64_t max_end_ticks = std::numeric_limits<uint64_t>::max());
@@ -212,10 +207,8 @@ public:
 
   inline uint64_t timerGetCount(uint8_t timer_id) {
     if (timer_id < timers.size()) {
-      if (timing_mode == TimingMode::ISRSTEP) {
-        //in timeskip mode time must pass here for the stepper isr pulse counter (time + 100ns)
-        setTicks(getTicks() + 1 + nanosToTicks(100, timers[timer_id].timer_frequency));
-      }
+      //time must pass here for the stepper isr pulse counter (time + 100ns)
+      setTicks(getTicks() + 1 + nanosToTicks(100, timers[timer_id].timer_frequency));
       return timers[timer_id].get_count(getTicks(), frequency);
     }
     return 0;
@@ -229,16 +222,11 @@ public:
 
   // Clock
   inline uint64_t getTicks() {
-    if (timing_mode == TimingMode::REALTIME_SCALED) {
-      updateRealtimeTicks();
-    }
     return ticks.load();
   }
 
   inline void setTicks(uint64_t new_ticks) {
-    if (timing_mode == TimingMode::ISRSTEP) {
-      ticks.store(new_ticks);
-    }
+    ticks.store(new_ticks);
   }
 
   // constants to reduce risk of typos
@@ -263,9 +251,7 @@ public:
   }
 
   inline uint64_t nanos() {
-    if (timing_mode == TimingMode::ISRSTEP) {
-      setTicks(getTicks() + 1 + nanosToTicks(100)); // Marlin has loops that only break after x ticks, so we need to increment ticks here
-    }
+    setTicks(getTicks() + 1 + nanosToTicks(100)); // Marlin has loops that only break after x ticks, so we need to increment ticks here
     return ticksToNanos(getTicks());
   }
 
