@@ -545,20 +545,20 @@ struct ScrollingData {
 };
 
 void Visualisation::ui_info_callback(UiWindow*) {
-  if (kernel.timing_mode == Kernel::TimingMode::ISRSTEP) {
-    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-  }
+  // if (kernel.timing_mode == Kernel::TimingMode::ISRSTEP) {
+  //   ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+  //   ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+  // }
   ui_realtime_scale = kernel.realtime_scale.load();
   ImGui::SliderFloat("sim speed 100", &ui_realtime_scale, 0.0f, 100.0f);
   ImGui::SliderFloat("sim speed 10", &ui_realtime_scale, 0.0f, 10.0f);
   ImGui::SliderFloat("sim speed 1", &ui_realtime_scale, 0.0f, 1.0f);
   ImGui::SliderFloat("sim speed 0.1", &ui_realtime_scale, 0.0f, 0.1f);
   kernel.realtime_scale.store(ui_realtime_scale);
-  if (kernel.timing_mode == Kernel::TimingMode::ISRSTEP) {
-    ImGui::PopItemFlag();
-    ImGui::PopStyleVar();
-  }
+  // if (kernel.timing_mode == Kernel::TimingMode::ISRSTEP) {
+  //   ImGui::PopItemFlag();
+  //   ImGui::PopStyleVar();
+  // }
 
   uint64_t time_source = kernel.ticksToNanos(kernel.getTicks());
   uint64_t hours = (time_source / (Kernel::ONE_BILLION * 60 * 60)) ;
@@ -570,18 +570,17 @@ void Visualisation::ui_info_callback(UiWindow*) {
   ImGui::Text("%02ld:%02ld:%02ld.%ld", hours, mins, seconds, remainder);
   ImGui::Text("ISR timing error: %ldns", kernel.isr_timing_error.load());
 
-
-  // lock the toggle button until the mode has been changed as it may be blocked
-  bool disabled_toggle = kernel.timing_mode != kernel.timing_mode_toggle;
-  if (disabled_toggle) {
-    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-  }
-  ImGui::Checkbox("Disable Realtime Mode ", (bool*)&kernel.timing_mode_toggle);
-  if (disabled_toggle) {
-    ImGui::PopItemFlag();
-    ImGui::PopStyleVar();
-  }
+  // // lock the toggle button until the mode has been changed as it may be blocked
+  // bool disabled_toggle = kernel.timing_mode != kernel.timing_mode_toggle;
+  // if (disabled_toggle) {
+  //   ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+  //   ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+  // }
+  // ImGui::Checkbox("Disable Realtime Mode ", (bool*)&kernel.timing_mode_toggle);
+  // if (disabled_toggle) {
+  //   ImGui::PopItemFlag();
+  //   ImGui::PopStyleVar();
+  // }
 
 
   static bool paused = false;
