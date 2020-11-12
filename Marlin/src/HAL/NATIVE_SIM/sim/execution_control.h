@@ -36,16 +36,19 @@ public:
   }
 
   void execute() {
+    running = true;
     if (!initialised) {
       initialised = true;
       thread_init();
     } else {
       thread_loop();
     }
+    running = false;
   }
 
   bool initialised = false;
   bool timer_enabled = false;
+  bool running = false;
 
   std::uint64_t timer_rate{0};
   std::uint64_t timer_compare{0};
@@ -87,11 +90,14 @@ struct KernelTimer {
     this->name = name;
   }
   void execute() {
+    running = true;
     isr_function();
+    running = false;
   }
 
   std::string name;
   bool active = false;
+  bool running = false;
   uint64_t compare = 0, source_offset = 0, timer_frequency = 0;
   std::function<void()> isr_function;
 };
