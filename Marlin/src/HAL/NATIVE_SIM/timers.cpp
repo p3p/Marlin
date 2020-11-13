@@ -75,7 +75,7 @@ void HAL_timer_init() {
   kernel.timerInit(STEP_TIMER_NUM, STEPPER_TIMER_RATE);
   kernel.timerInit(TEMP_TIMER_NUM, TEMP_TIMER_RATE);
   // Configure and start systick early
-  kernel.timerInit(SYSTICK_TIMER_NUM, HAL_TIMER_RATE);
+  kernel.timerInit(SYSTICK_TIMER_NUM, 1000000);
   HAL_timer_enable_interrupt(SYSTICK_TIMER_NUM);
   HAL_timer_start(SYSTICK_TIMER_NUM, SYSTICK_TIMER_FREQUENCY);
 }
