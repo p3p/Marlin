@@ -46,12 +46,19 @@ double temperature_to_resistance(double t) {
 	return r;
 }
 
-Heater::Heater(pin_t heater, pin_t adc) {
-  heater_pin = heater;
-  adc_pin = analogInputToDigitalPin(adc);
+Heater::Heater(pin_t heater_pin, pin_t adc_pin, heater_data heater, hotend_data hotend, adc_data adc) : heater_pin(heater_pin), adc_pin(analogInputToDigitalPin(adc_pin)) {
+  heater_resistance = heater.resistance;
+  heater_volts = heater.voltage;
 
-  Gpio::attach(adc_pin, [this](GpioEvent& event){ this->interrupt(event); });
-  Gpio::attach(heater_pin, [this](GpioEvent& event){ this->interrupt(event); });
+  hotend_mass = hotend.mass;
+  hotend_surface_area = hotend.surface_area;
+  hotend_specific_heat = hotend.specific_heat;
+
+  adc_resolution = adc.resolution;
+  adc_pullup_resistance = adc.pullup_resistance;
+
+  Gpio::attach(this->adc_pin, [this](GpioEvent& event){ this->interrupt(event); });
+  Gpio::attach(this->heater_pin, [this](GpioEvent& event){ this->interrupt(event); });
   hotend_energy = hotend_ambient_temperature * (hotend_specific_heat * hotend_mass);
   hotend_temperature = hotend_ambient_temperature;
 }

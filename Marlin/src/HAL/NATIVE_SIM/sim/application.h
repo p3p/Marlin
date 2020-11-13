@@ -56,8 +56,8 @@ struct GraphWindow : public UiWindow {
 class Simulation {
 public:
 
-  Simulation() :  hotend(HEATER_0_PIN, TEMP_0_PIN),
-                  bed_heater(HEATER_BED_PIN, TEMP_BED_PIN)
+  Simulation() :  hotend(HEATER_0_PIN, TEMP_0_PIN, {12, 3.6}, {13, 20, 0.897}, {4700, 12}),
+                  bed_heater(HEATER_BED_PIN, TEMP_BED_PIN, {12, 1.2}, {325, 824, 0.897}, {4700, 12})
                   #if HAS_SPI_FLASH
                   , spi_flash(SCK_PIN, MISO_PIN, MOSI_PIN, W25QXX_CS_PIN, SPI_FLASH_SIZE)
                   #endif
