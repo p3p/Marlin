@@ -34,7 +34,7 @@ struct enclosure_data {
 };
 
 struct heater_data {
-  double voltage, reistance;
+  double voltage, resistance;
 };
 
 struct hotend_data {
@@ -43,12 +43,12 @@ struct hotend_data {
 
 struct adc_data {
   double pullup_resistance;
-  uint8_t resolution;
+  uint32_t resolution;
 };
 
 class Heater: public Peripheral {
 public:
-  Heater(pin_type heater, pin_type adc);
+  Heater(pin_type heater_pin, pin_type adc_pin, heater_data heater, hotend_data hotend, adc_data adc);
   virtual ~Heater();
   void interrupt(GpioEvent& ev);
   void update();
