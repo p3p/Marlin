@@ -5,15 +5,11 @@
 
 bool Kernel::initialised = false;
 
-//execute highest priority thread with closest interrupt, return true if something was executed
 bool Kernel::execute_loop( uint64_t max_end_ticks) {
   //simulation time lock
   updateRealtime();
   if (getRealtimeTicks() > getTicks()) {
     realtime_nanos = nanos();
-    // todo: auto reduce scale correctly
-    //float scale = realtime_scale.load();
-    //realtime_scale.store(scale *= 0.95f);
   } else while (getTicks() > getRealtimeTicks()) {
     updateRealtime();
     std::this_thread::yield();
@@ -32,36 +28,22 @@ bool Kernel::execute_loop( uint64_t max_end_ticks) {
   }
 
   uint64_t current_ticks = getTicks();
+  uint64_t current_priority = 99;
+  if (isr_stack.size()) {
+    current_priority = isr_stack.back()->priority;
+  }
 
-  /**
-   *
-   *  todo: call update on hardware that has registered it needs to trigger hardware interrupts here
-   *
-   * */
-
-
-  // todo: move them back into the same array to get rid of this code duplication?..
   uint64_t lowest_isr = std::numeric_limits<uint64_t>::max();
   KernelTimer* next_isr = nullptr;
   for (auto& timer : timers) {
     uint64_t value = timer.next_interrupt(frequency);
-    if (timers_active && value < lowest_isr && value < max_end_ticks && timer.enabled() && !timer.running) {
+    if (timers_active && value < lowest_isr && value < max_end_ticks && timer.enabled() && !timer.running && timer.priority < current_priority) {
       lowest_isr = value;
       next_isr = &timer;
     }
   }
 
-  uint64_t lowest = std::numeric_limits<uint64_t>::max();
-  KernelThread* next = nullptr;
-  for (auto& thread : threads) {
-    uint64_t value = thread.next_interrupt(frequency);
-    if (timers_active && value < lowest && value < max_end_ticks && thread.timer_enabled && this_thread != &thread && !thread.running) {
-      lowest = value;
-      next = &thread;
-    }
-  }
-
-  if (next_isr != nullptr && lowest_isr < lowest) {
+  if (next_isr != nullptr ) {
     if (current_ticks > lowest_isr) {
       isr_timing_error = current_ticks - lowest_isr;
       next_isr->source_offset = current_ticks; // late interrupt
@@ -70,19 +52,9 @@ bool Kernel::execute_loop( uint64_t max_end_ticks) {
       isr_timing_error = 0;
     }
     setTicks(next_isr->source_offset);
+    isr_stack.push_back(next_isr);
     next_isr->execute();
-    return true;
-  }
-
-  if (next != nullptr) {
-    if (current_ticks > lowest) next->timer_offset = current_ticks; // late interrupt
-    else next->timer_offset = next->next_interrupt(frequency); // timer was reset when the interrupt fired
-    setTicks(next->timer_offset);
-
-    auto old_thread = this_thread;
-    this_thread = next;
-    next->execute();
-    this_thread = old_thread;
+    isr_stack.pop_back();
     return true;
   }
 
@@ -98,14 +70,15 @@ void Kernel::delayCycles(uint64_t cycles) {
 
 // this is needed for when marlin loops idle waiting for an event with no delays (syncronize)
 void Kernel::yield() {
-  if (this_thread != nullptr) {
-    auto max_yield = this_thread->next_interrupt(frequency);
-    if(!execute_loop(max_yield)) { // dont wait longer than this threads exec period
-      setTicks(max_yield);
-      this_thread->timer_offset = max_yield; // there was nothing to run, and we now overrun our next cycle.
-    }
-  } else {
-    assert(false); // what else could have yielded? ISRs should never yield
+  if(isr_stack.size() == 0) {
+    // Kernel not started?
+    setTicks(getTicks() + nanosToTicks(100));
+    return;
+  }
+  auto max_yield = isr_stack.back()->next_interrupt(frequency);
+  if(!execute_loop(max_yield)) { // dont wait longer than this threads exec period
+    setTicks(max_yield);
+    isr_stack.back()->source_offset = max_yield; // there was nothing to run, and we now overrun our next cycle.
   }
 }
 

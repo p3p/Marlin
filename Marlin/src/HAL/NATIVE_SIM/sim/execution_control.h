@@ -8,9 +8,9 @@
 #include <cassert>
 #include <map>
 #include <sstream>
+#include <deque>
 
-extern void setup();
-extern void loop();
+extern void marlin_loop();
 extern "C" void TIMER0_IRQHandler();
 extern "C" void TIMER1_IRQHandler();
 extern "C" void SYSTICK_IRQHandler();
@@ -18,46 +18,6 @@ extern "C" void SYSTICK_IRQHandler();
 constexpr inline uint64_t tickConvertFrequency(std::uint64_t value, std::uint64_t from, std::uint64_t to) {
   return from > to ? value / (from / to) : value * (to / from);
 }
-
-class KernelThread {
-public:
-  KernelThread(std::string name, void (*callback_loop)(),  void (*callback_init)() = nullptr) : name(name), thread_loop(callback_loop), thread_init(callback_init == nullptr ? callback_loop : callback_init) {}
-
-  uint64_t next_interrupt(const uint64_t main_frequency) {
-    return timer_enabled ? timer_offset + tickConvertFrequency(timer_compare, timer_rate, main_frequency) : std::numeric_limits<uint64_t>::max();
-  }
-
-  uint64_t timer_count(const uint64_t system_ticks, const uint64_t system_frequency) {
-    return tickConvertFrequency(system_ticks - timer_offset, timer_rate, system_frequency);
-  }
-
-  bool interrupt(const uint64_t ticks, const uint64_t frequency) {
-    return ticks > next_interrupt(frequency);
-  }
-
-  void execute() {
-    running = true;
-    if (!initialised) {
-      initialised = true;
-      thread_init();
-    } else {
-      thread_loop();
-    }
-    running = false;
-  }
-
-  bool initialised = false;
-  bool timer_enabled = false;
-  bool running = false;
-
-  std::uint64_t timer_rate{0};
-  std::uint64_t timer_compare{0};
-  std::uint64_t timer_offset{0};
-  std::string name;
-
-  std::function<void()> thread_loop;
-  std::function<void()> thread_init;
-};
 
 struct KernelTimer {
   KernelTimer(std::string name, void (*callback)()) : name(name), isr_function(callback) {}
@@ -98,7 +58,7 @@ struct KernelTimer {
   std::string name;
   bool active = false;
   bool running = false;
-  uint64_t compare = 0, source_offset = 0, timer_frequency = 0;
+  uint64_t compare = 0, source_offset = 0, timer_frequency = 0, priority = 10;
   std::function<void()> isr_function;
 };
 
@@ -110,25 +70,13 @@ public:
   };
 
   // ordered highest priority first
-  Kernel() : threads({KernelThread{"Marlin Loop", loop, setup}}),
-             timers({KernelTimer{"Stepper ISR", TIMER0_IRQHandler}, {"Temperate ISR", TIMER1_IRQHandler}, {"SysTick", SYSTICK_IRQHandler}}),
+  Kernel() : timers({KernelTimer{"Stepper ISR", TIMER0_IRQHandler}, {"Temperate ISR", TIMER1_IRQHandler}, {"SysTick", SYSTICK_IRQHandler}, {"Marlin Loop", marlin_loop}}),
              last_clock_read(clock.now()) {
-    threads[0].timer_offset = getTicks();
-    threads[0].timer_rate = 1000000;
-    threads[0].timer_compare = 500;
+    timerInit(3, 1000000);
+    timers[0].priority = 0;
+    timers[1].priority = 5;
+    timers[2].priority = 1;
   }
-  std::array<KernelThread, 1> threads;
-  std::array<KernelTimer, 3> timers;
-  //std::array<KernelTimer, N> gpio_interrupt;
-
-  KernelThread* this_thread = nullptr;
-  std::vector<KernelThread*> call_stack;
-  bool timers_active = true;
-  bool quit_requested = false;
-
-  std::chrono::steady_clock clock;
-  std::chrono::steady_clock::time_point last_clock_read;
-  std::atomic_uint64_t isr_timing_error = 0;
 
   inline void updateRealtime() {
     auto now = clock.now();
@@ -283,9 +231,20 @@ public:
     delayCycles(nanosToTicks(secs * ONE_BILLION));
   }
 
+  bool timers_active = true;
+  std::array<KernelTimer, 4> timers;
+  std::deque<KernelTimer*> isr_stack;
+
+
+  bool quit_requested = false;
+
+  std::chrono::steady_clock clock;
+  std::chrono::steady_clock::time_point last_clock_read;
+  std::atomic_uint64_t isr_timing_error = 0;
   std::atomic<float> realtime_scale = 1.0;
   std::atomic_uint64_t ticks{0};
   uint64_t realtime_nanos = 0;
+
   static constexpr uint32_t frequency = 100'000'000;
   static bool initialised;
 };

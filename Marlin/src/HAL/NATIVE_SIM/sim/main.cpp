@@ -35,16 +35,27 @@ void HAL_idletask() {
   kernel.yield();
 }
 
-void marlin_main() {
-  #ifdef MYSERIAL0
-    MYSERIAL0.begin(BAUDRATE);
-    SERIAL_FLUSHTX();
-  #endif
+extern void setup();
+extern void loop();
+void marlin_loop() {
+  static bool initialised = false;
+  if (!initialised) {
+    initialised = true;
+    #ifdef MYSERIAL0
+      MYSERIAL0.begin(BAUDRATE);
+      SERIAL_FLUSHTX();
+    #endif
+    HAL_timer_init();
+    setup();
+  } else loop();
+}
 
-  //kernel.setFrequency(F_CPU);
-  HAL_timer_init();
-  kernel.threads[0].timer_enabled = true;
+void simulation_main() {
+  // Marlin Loop 500hz
+  kernel.timerStart(3, 500);
+  kernel.timerEnable(3);
   kernel.initialised = true;
+
   while(!main_finished) {
     try {
       kernel.execute_loop();
@@ -63,7 +74,7 @@ void marlin_main() {
 int main(int, char**) {
   Application app;
 
-  std::thread marlin_loop(marlin_main);
+  std::thread simulation_loop(simulation_main);
 
   while (app.active) {
     app.update();
@@ -73,7 +84,7 @@ int main(int, char**) {
 
   main_finished = true;
   kernel.quit_requested = true;
-  marlin_loop.join();
+  simulation_loop.join();
 
   return 0;
 }
