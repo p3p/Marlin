@@ -1,19 +1,29 @@
 #ifdef __PLAT_NATIVE_SIM__
 
+#include <limits>
+
 #include "user_interface.h"
 #include "execution_control.h"
 
-bool Kernel::initialised = false;
+std::chrono::steady_clock Kernel::TimeControl::clock;
+std::atomic_uint64_t Kernel::TimeControl::ticks{0};
+uint64_t Kernel::TimeControl::realtime_nanos = 0;
+std::atomic<float> Kernel::TimeControl::realtime_scale = 1.0;
+
+extern void marlin_loop();
+extern "C" void TIMER0_IRQHandler();
+extern "C" void TIMER1_IRQHandler();
+extern void SYSTICK_IRQHandler();
+std::array<KernelTimer, 4> Kernel::Timers::timers({KernelTimer{"Stepper ISR", TIMER0_IRQHandler, 1}, {"Temperate ISR", TIMER1_IRQHandler, 10}, {"SysTick", SYSTICK_IRQHandler, 5}, {"Marlin Loop", marlin_loop, 100}});
+
+bool Kernel::timers_active = true;
+std::deque<KernelTimer*> Kernel::isr_stack;
+bool Kernel::quit_requested = false;
+std::atomic_uint64_t Kernel::isr_timing_error = 0;
 
 bool Kernel::execute_loop( uint64_t max_end_ticks) {
   //simulation time lock
-  updateRealtime();
-  if (getRealtimeTicks() > getTicks()) {
-    realtime_nanos = nanos();
-  } else while (getTicks() > getRealtimeTicks()) {
-    updateRealtime();
-    std::this_thread::yield();
-  }
+  TimeControl::realtime_sync();
 
   //todo: investigate dataloss when pulling from SerialMonitor rather than pushing from here
 
@@ -27,16 +37,16 @@ bool Kernel::execute_loop( uint64_t max_end_ticks) {
     std::dynamic_pointer_cast<SerialMonitor>(UserInterface::ui_elements["Serial Monitor"])->insert_text(buffer);
   }
 
-  uint64_t current_ticks = getTicks();
-  uint64_t current_priority = 99;
+  uint64_t current_ticks = TimeControl::getTicks();
+  uint64_t current_priority = std::numeric_limits<uint64_t>::max();
   if (isr_stack.size()) {
     current_priority = isr_stack.back()->priority;
   }
 
   uint64_t lowest_isr = std::numeric_limits<uint64_t>::max();
   KernelTimer* next_isr = nullptr;
-  for (auto& timer : timers) {
-    uint64_t value = timer.next_interrupt(frequency);
+  for (auto& timer : Timers::timers) {
+    uint64_t value = timer.next_interrupt(TimeControl::frequency);
     if (timers_active && value < lowest_isr && value < max_end_ticks && timer.enabled() && !timer.running && timer.priority < current_priority) {
       lowest_isr = value;
       next_isr = &timer;
@@ -48,10 +58,10 @@ bool Kernel::execute_loop( uint64_t max_end_ticks) {
       isr_timing_error = current_ticks - lowest_isr;
       next_isr->source_offset = current_ticks; // late interrupt
     } else {
-      next_isr->source_offset = next_isr->next_interrupt(frequency); // timer was reset when the interrupt fired
+      next_isr->source_offset = next_isr->next_interrupt(TimeControl::frequency); // timer was reset when the interrupt fired
       isr_timing_error = 0;
     }
-    setTicks(next_isr->source_offset);
+    TimeControl::setTicks(next_isr->source_offset);
     isr_stack.push_back(next_isr);
     next_isr->execute();
     isr_stack.pop_back();
@@ -63,21 +73,21 @@ bool Kernel::execute_loop( uint64_t max_end_ticks) {
 
 // if a thread wants to wait, see what should be executed during that wait
 void Kernel::delayCycles(uint64_t cycles) {
-  auto end = getTicks() + cycles;
-  while (execute_loop(end) && getTicks() < end);
-  if (end > getTicks()) setTicks(end);
+  auto end = TimeControl::getTicks() + cycles;
+  while (execute_loop(end) && TimeControl::getTicks() < end);
+  if (end > TimeControl::getTicks()) TimeControl::setTicks(end);
 }
 
 // this is needed for when marlin loops idle waiting for an event with no delays (syncronize)
 void Kernel::yield() {
   if(isr_stack.size() == 0) {
     // Kernel not started?
-    setTicks(getTicks() + nanosToTicks(100));
+    TimeControl::addTicks(TimeControl::nanosToTicks(100));
     return;
   }
-  auto max_yield = isr_stack.back()->next_interrupt(frequency);
+  auto max_yield = isr_stack.back()->next_interrupt(TimeControl::frequency);
   if(!execute_loop(max_yield)) { // dont wait longer than this threads exec period
-    setTicks(max_yield);
+    TimeControl::setTicks(max_yield);
     isr_stack.back()->source_offset = max_yield; // there was nothing to run, and we now overrun our next cycle.
   }
 }

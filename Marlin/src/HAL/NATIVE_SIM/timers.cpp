@@ -72,40 +72,40 @@
 extern Kernel kernel;
 
 void HAL_timer_init() {
-  kernel.timerInit(STEP_TIMER_NUM, STEPPER_TIMER_RATE);
-  kernel.timerInit(TEMP_TIMER_NUM, TEMP_TIMER_RATE);
+  Kernel::Timers::timerInit(STEP_TIMER_NUM, STEPPER_TIMER_RATE);
+  Kernel::Timers::timerInit(TEMP_TIMER_NUM, TEMP_TIMER_RATE);
   // Configure and start systick early
-  kernel.timerInit(SYSTICK_TIMER_NUM, 1000000);
+  Kernel::Timers::timerInit(SYSTICK_TIMER_NUM, 1000000);
   HAL_timer_enable_interrupt(SYSTICK_TIMER_NUM);
   HAL_timer_start(SYSTICK_TIMER_NUM, SYSTICK_TIMER_FREQUENCY);
 }
 
 void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {
-  kernel.timerStart(timer_num, frequency);
+  Kernel::Timers::timerStart(timer_num, frequency);
 }
 
 void HAL_timer_enable_interrupt(const uint8_t timer_num) {
-  kernel.timerEnable(timer_num);
+  Kernel::Timers::timerEnable(timer_num);
 }
 
 void HAL_timer_disable_interrupt(const uint8_t timer_num) {
-  kernel.timerDisable(timer_num);
+  Kernel::Timers::timerDisable(timer_num);
 }
 
 bool HAL_timer_interrupt_enabled(const uint8_t timer_num) {
-  return kernel.timerEnabled(timer_num);
+  return Kernel::Timers::timerEnabled(timer_num);
 }
 
 void HAL_timer_set_compare(const uint8_t timer_num, const hal_timer_t compare) {
-  kernel.timerSetCompare(timer_num, compare);
+  Kernel::Timers::timerSetCompare(timer_num, compare);
 }
 
 hal_timer_t HAL_timer_get_compare(const uint8_t timer_num) {
-  return kernel.timerGetCompare(timer_num);
+  return Kernel::Timers::timerGetCompare(timer_num);
 }
 
 hal_timer_t HAL_timer_get_count(const uint8_t timer_num) {
-  return kernel.timerGetCount(timer_num);
+  return Kernel::Timers::timerGetCount(timer_num);
 }
 
 #endif // __PLAT_NATIVE_SIM__

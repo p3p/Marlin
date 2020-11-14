@@ -104,8 +104,8 @@ inline uint8_t HAL_get_reset_source(void) { return RST_POWER_ON; }
 
 /* ---------------- Delay in cycles */
 
-#define DELAY_CYCLES(x) kernel.delayCycles(x)
-#define SYSTEM_YIELD() kernel.yield()
+#define DELAY_CYCLES(x) Kernel::delayCycles(x)
+#define SYSTEM_YIELD() Kernel::yield()
 
 // Maple Compatibility
 typedef void (*systickCallback_t)(void);

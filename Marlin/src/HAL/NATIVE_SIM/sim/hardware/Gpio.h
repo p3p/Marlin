@@ -113,13 +113,13 @@ public:
     if (!valid_pin(pin)) return;
     GpioEvent::Type evt_type = value > 1 ? GpioEvent::SET_VALUE : value > pin_map[pin].value ? GpioEvent::RISE : value < pin_map[pin].value ? GpioEvent::FALL : GpioEvent::NOP;
     pin_map[pin].value = value;
-    GpioEvent evt(kernel.getTicks(), pin, evt_type);
+    GpioEvent evt(Kernel::TimeControl::getTicks(), pin, evt_type);
     for (auto callback : pin_map[pin].callbacks) callback(evt);
   }
 
   static uint16_t get(pin_type pin) {
     if (!valid_pin(pin)) return 0;
-    GpioEvent evt(kernel.getTicks(), pin, GpioEvent::GET_VALUE);
+    GpioEvent evt(Kernel::TimeControl::getTicks(), pin, GpioEvent::GET_VALUE);
     for (auto callback : pin_map[pin].callbacks) callback(evt);
     return pin_map[pin].value;
   }
@@ -132,7 +132,7 @@ public:
     if (!valid_pin(pin)) return;
     pin_map[pin].mode = pin_data::Mode::GPIO;
 
-    GpioEvent evt(kernel.getTicks(), pin, GpioEvent::Type::SETM);
+    GpioEvent evt(Kernel::TimeControl::getTicks(), pin, GpioEvent::Type::SETM);
 
     if (value != 1) setDir(pin, pin_data::Direction::INPUT);
     else setDir(pin, pin_data::Direction::OUTPUT);
@@ -150,7 +150,7 @@ public:
   static void setDir(pin_type pin, uint8_t value) {
     if (!valid_pin(pin)) return;
     pin_map[pin].dir = value;
-    GpioEvent evt(kernel.getTicks(), pin, GpioEvent::Type::SETD);
+    GpioEvent evt(Kernel::TimeControl::getTicks(), pin, GpioEvent::Type::SETD);
     for (auto callback : pin_map[pin].callbacks) callback(evt);
   }
 

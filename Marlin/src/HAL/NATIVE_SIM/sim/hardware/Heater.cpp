@@ -77,7 +77,7 @@ void Heater::interrupt(GpioEvent& ev) {
     pwm_hightick = ev.timestamp;
 
   } else if ((ev.event == ev.NOP || ev.event == ev.FALL) && ev.pin_id == heater_pin) {
-    double time_delta = kernel.ticksToNanos(ev.timestamp - pwm_last_update) / (double)kernel.ONE_BILLION;
+    double time_delta = Kernel::TimeControl::ticksToNanos(ev.timestamp - pwm_last_update) / (double)Kernel::TimeControl::ONE_BILLION;
     double energy_in = pwm_lowtick < pwm_hightick ? ((heater_volts * heater_volts) / heater_resistance) * time_delta : 0;
     double energy_out = ((hotend_convection_transfer * hotend_surface_area * ( hotend_energy / (hotend_specific_heat * hotend_mass) - hotend_ambient_temperature)) * time_delta);
     hotend_energy += energy_in - energy_out;
