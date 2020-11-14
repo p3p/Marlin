@@ -28,8 +28,8 @@
 #include "../shared/Delay.h"
 
 // Interrupts
-void cli() { kernel.disableInterrupts(); } // Disable
-void sei() { kernel.enableInterrupts(); } // Enable
+void cli() { Kernel::disableInterrupts(); } // Disable
+void sei() { Kernel::enableInterrupts(); } // Enable
 
 void noInterrupts() {cli();}
 void interrupts() {sei();}
@@ -40,20 +40,20 @@ void _delay_ms(const int delay_ms) {
 }
 
 uint32_t millis() {
-  return (uint32_t)kernel.millis();
+  return (uint32_t)Kernel::TimeControl::millis();
 }
 
 uint64_t micros() {
-  return (uint32_t)kernel.micros();
+  return (uint32_t)Kernel::TimeControl::micros();
 }
 
 // This is required for some Arduino libraries we are using
 void delayMicroseconds(uint32_t us) {
-  kernel.delayMicros(us);
+  Kernel::delayMicros(us);
 }
 
 extern "C" void delay(const int msec) {
-  kernel.delayMillis(msec);
+  Kernel::delayMillis(msec);
 }
 
 // IO functions

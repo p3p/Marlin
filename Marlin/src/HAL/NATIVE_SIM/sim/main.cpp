@@ -29,10 +29,9 @@
 
 
 std::atomic_bool main_finished = false;
-Kernel kernel;
 
 void HAL_idletask() {
-  kernel.yield();
+  Kernel::yield();
 }
 
 extern void setup();
@@ -52,13 +51,13 @@ void marlin_loop() {
 
 void simulation_main() {
   // Marlin Loop 500hz
-  kernel.timerStart(3, 500);
-  kernel.timerEnable(3);
-  kernel.initialised = true;
+  Kernel::Timers::timerInit(3, 1000000);
+  Kernel::Timers::timerStart(3, 500);
+  Kernel::Timers::timerEnable(3);
 
   while(!main_finished) {
     try {
-      kernel.execute_loop();
+      Kernel::execute_loop();
     } catch (std::runtime_error& e) {
       // stack unrolled by exception in order to exit cleanly
       // todo: use a custom exception
@@ -83,7 +82,7 @@ int main(int, char**) {
   }
 
   main_finished = true;
-  kernel.quit_requested = true;
+  Kernel::quit_requested = true;
   simulation_loop.join();
 
   return 0;
