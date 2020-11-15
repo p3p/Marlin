@@ -6,6 +6,7 @@
 #include "hardware/LinearAxis.h"
 #include "hardware/print_bed.h"
 #include "hardware/bed_probe.h"
+#include "hardware/FilamentRunoutSensor.h"
 
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
@@ -170,6 +171,7 @@ public:
   PrintBed print_bed;
   glm::vec3 bed_level_point[3] = {{100,200,0},{0,0,0},{200,0,0}};
   BedProbe probe;
+  FilamentRunoutSensor runout_sensor;
 
   float ui_realtime_scale = 0.0f;
 
