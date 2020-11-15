@@ -11,6 +11,7 @@
 
 #include "XPT2046Device.h"
 #include "../../tft/xpt2046.h"
+#include "src/lcd/tft/touch.h"
 
 void XPT2046Device::onByteReceived(uint8_t _byte) {
   SPISlavePeripheral::onByteReceived(_byte);
@@ -38,12 +39,23 @@ void XPT2046Device::onByteReceived(uint8_t _byte) {
   }
 }
 
+void XPT2046Device::onEndTransaction() {
+  SPISlavePeripheral::onEndTransaction();
+  if (!dirty) return;
+  auto now = Kernel::SimulationRuntime::millis();
+  // for at least 3 touches
+  if ((now - touch_time) > (MINIMUM_HOLD_TIME * 3)) {
+    dirty = false;
+  }
+};
+
 
 void XPT2046Device::ui_callback(UiWindow* window) {
   if (ImGui::IsWindowFocused() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
     lastClickX = ImGui::GetIO().MousePos.x;
     lastClickY = ImGui::GetIO().MousePos.y;
     dirty = true;
+    touch_time = Kernel::SimulationRuntime::millis();
     // printf("click x: %d, y: %d\n", lastClickX, lastClickY);
   }
 }

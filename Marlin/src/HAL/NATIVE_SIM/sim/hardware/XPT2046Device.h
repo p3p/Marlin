@@ -16,12 +16,10 @@ public:
   void ui_callback(UiWindow* window);
 
   void onByteReceived(uint8_t _byte) override;
-  void onEndTransaction() override {
-    SPISlavePeripheral::onEndTransaction();
-    dirty = false;
-  };
+  void onEndTransaction() override;
 
   uint16_t lastClickX = 0;
   uint16_t lastClickY = 0;
   bool dirty = false;
+  uint64_t touch_time;
 };
