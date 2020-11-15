@@ -36,6 +36,8 @@ void SDCard::onRequestedDataReceived(uint8_t token, uint8_t* _data, size_t count
     crc = _data[4];
   }
 
+  UNUSED(crc);
+
   // Marlin SD2Card keep the CS LOW for multiple commands, so I need to manually clear the token, to receive next.
   clearCurrentToken();
 

@@ -272,9 +272,7 @@ struct Viewport : public UiWindow {
     hovered = ImGui::IsItemHovered();
     focused = ImGui::IsWindowFocused();
 
-    if(show_callback != nullptr) {
-      show_callback(this);
-    }
+    if (show_callback) show_callback(this);
 
     ImGui::End();
     ImGui::PopStyleVar();

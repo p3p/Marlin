@@ -325,7 +325,7 @@ void Visualisation::update() {
   glUniformMatrix4fv( glGetUniformLocation( program, "u_mvp" ), 1, GL_FALSE, glm::value_ptr(mvp));
   glBindVertexArray( vao );
   glBindBuffer( GL_ARRAY_BUFFER, vbo );
-  glBufferData( GL_ARRAY_BUFFER, sizeof( g_vertex_buffer_data ), &g_vertex_buffer_data[0], GL_STATIC_DRAW );
+  glBufferData( GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), &g_vertex_buffer_data[0], GL_STATIC_DRAW );
   if(follow_mode != 1) {
     glDrawArrays( GL_TRIANGLES, 0, 18 );
   }
@@ -447,9 +447,9 @@ void Visualisation::ui_viewport_callback(UiWindow* window) {
   Viewport& viewport = *((Viewport*)window);
 
   if (viewport.dirty) {
-      framebuffer->update(viewport.viewport_size.x, viewport.viewport_size.y);
-      viewport.texture_id = framebuffer->texture_id();
-      camera.update_aspect_ratio(viewport.viewport_size.x / viewport.viewport_size.y);
+    framebuffer->update(viewport.viewport_size.x, viewport.viewport_size.y);
+    viewport.texture_id = framebuffer->texture_id();
+    camera.update_aspect_ratio(viewport.viewport_size.x / viewport.viewport_size.y);
   }
 
   if (viewport.focused) {
@@ -571,8 +571,8 @@ void Visualisation::ui_info_callback(UiWindow* w) {
   remainder = (remainder % (Kernel::TimeControl::ONE_BILLION * 60));
   uint64_t seconds = remainder / (Kernel::TimeControl::ONE_BILLION);
   remainder = remainder % (Kernel::TimeControl::ONE_BILLION);
-  ImGui::Text("%02ld:%02ld:%02ld.%09ld", hours, mins, seconds, remainder);
-  ImGui::Text("ISR timing error: %ldns", Kernel::isr_timing_error.load());
+  ImGui::Text("%02lld:%02lld:%02lld.%lld", hours, mins, seconds, remainder);
+  ImGui::Text("ISR timing error: %lldns", Kernel::isr_timing_error.load());
 
   // // lock the toggle button until the mode has been changed as it may be blocked
   // bool disabled_toggle = Kernel::timing_mode != Kernel::timing_mode_toggle;
@@ -585,7 +585,6 @@ void Visualisation::ui_info_callback(UiWindow* w) {
   //   ImGui::PopItemFlag();
   //   ImGui::PopStyleVar();
   // }
-
 
   static bool paused = false;
   static ScrollingData sdata1, sdata2;

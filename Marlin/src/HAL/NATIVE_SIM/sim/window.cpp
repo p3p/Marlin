@@ -59,7 +59,6 @@ WindowReturnCode sdl_window_create(WindowConfig config = {}) {
     return WindowReturnCode::SDL_GL_CREATECONTEXT_FAILED;
   }
 
-
   SDL_GL_MakeCurrent(window, gl_context);
   SDL_GL_SetSwapInterval(config.vsync);
 
@@ -95,7 +94,7 @@ WindowReturnCode imgui_create() {
   ImGuiIO& io = ImGui::GetIO();
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-//    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+  //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
   ImGuiStyle& style = ImGui::GetStyle();
   if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
@@ -104,11 +103,11 @@ WindowReturnCode imgui_create() {
   }
 
   // Setup Platform/Renderer bindings
-  if(!ImGui_ImplSDL2_InitForOpenGL(window, gl_context)) {
+  if (!ImGui_ImplSDL2_InitForOpenGL(window, gl_context)) {
     fprintf(stderr, "ImGui_ImplSDL2_InitForOpenGL: Failed to init Imgui SDL2 support!\n");
     return WindowReturnCode::IMGUI_SDLINIT_FAIL;
   }
-  if(!ImGui_ImplOpenGL3_Init("#version 410")) {
+  if (!ImGui_ImplOpenGL3_Init("#version 410")) {
     fprintf(stderr, "ImGui_ImplOpenGL3_Init:Failed to init Imgui OpenGL3 support!\n");
     return WindowReturnCode::IMGUI_GLINIT_FAIL;
   }
@@ -122,7 +121,7 @@ void imgui_destroy() {
   ImGui::DestroyContext();
 }
 
-} // namesapce window_impl
+} // namespace window_impl
 
 Window::Window() {
   if (window_impl::sdl_window_create()) return;
@@ -131,8 +130,8 @@ Window::Window() {
 }
 
 Window::~Window() {
-  if(window_impl::imgui_initialised) window_impl::imgui_destroy();
-  if(window_impl::window_valid) window_impl::sdl_window_destroy();
+  if (window_impl::imgui_initialised) window_impl::imgui_destroy();
+  if (window_impl::window_valid) window_impl::sdl_window_destroy();
 }
 
 void* Window::getHandle() {
