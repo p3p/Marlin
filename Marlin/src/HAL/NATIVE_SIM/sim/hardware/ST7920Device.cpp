@@ -162,13 +162,22 @@ void ST7920Device::interrupt(GpioEvent& ev) {
 }
 
 void ST7920Device::ui_callback(UiWindow* window) {
+  static long int call_count = 0;
+  static uint8_t up_held = 0, down_held = 0;
+  call_count++;
   if (ImGui::IsWindowFocused()) {
-    key_pressed[KeyName::KILL_BUTTON] = ImGui::IsKeyDown(SDL_SCANCODE_K);
-    key_pressed[KeyName::ENCODER_BUTTON] = ImGui::IsKeyDown(SDL_SCANCODE_SPACE);
-    encoder_position += ImGui::IsKeyDown(SDL_SCANCODE_UP);
-    encoder_position -= ImGui::IsKeyDown(SDL_SCANCODE_DOWN);
+
+    key_pressed[KeyName::KILL_BUTTON]    = ImGui::IsKeyDown(SDL_SCANCODE_K);
+    key_pressed[KeyName::ENCODER_BUTTON] = ImGui::IsKeyDown(SDL_SCANCODE_SPACE) || ImGui::IsKeyDown(SDL_SCANCODE_RETURN) || ImGui::IsKeyDown(SDL_SCANCODE_RIGHT);
+
+    // Turn keypresses (and repeat) into encoder clicks
+    if (up_held) { up_held--; encoder_position--; }
+    else if (ImGui::IsKeyPressed(SDL_SCANCODE_UP)) up_held = 4;
+    if (down_held) { down_held--; encoder_position++; }
+    else if (ImGui::IsKeyPressed(SDL_SCANCODE_DOWN)) down_held = 4;
+
     if (ImGui::IsWindowHovered()) {
-      key_pressed[KeyName::ENCODER_BUTTON] = (ImGui::IsMouseClicked(0) | ImGui::IsKeyDown(SDL_SCANCODE_SPACE));
+      key_pressed[KeyName::ENCODER_BUTTON] |= ImGui::IsMouseClicked(0);
       encoder_position += ImGui::GetIO().MouseWheel > 0 ? 1 : ImGui::GetIO().MouseWheel < 0 ? -1 : 0;
     }
   }
