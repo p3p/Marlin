@@ -560,7 +560,7 @@ void Visualisation::ui_info_callback(UiWindow*) {
   //   ImGui::PopStyleVar();
   // }
 
-  uint64_t time_source = Kernel::TimeControl::ticksToNanos(Kernel::TimeControl::getTicks());
+  uint64_t time_source = Kernel::SimulationRuntime::nanos();
   uint64_t hours = (time_source / (Kernel::TimeControl::ONE_BILLION * 60 * 60)) ;
   uint64_t remainder = (time_source % (Kernel::TimeControl::ONE_BILLION * 60 * 60));
   uint64_t mins = (remainder / (Kernel::TimeControl::ONE_BILLION * 60));

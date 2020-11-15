@@ -62,7 +62,6 @@ public:
   class TimeControl {
   public:
     inline static void updateRealtime() {
-      static std::chrono::steady_clock::time_point last_clock_read(clock.now());
       auto now = clock.now();
       auto delta = now - last_clock_read;
       uint64_t delta_uint64 = std::chrono::duration_cast<std::chrono::nanoseconds>(delta).count();
@@ -116,7 +115,7 @@ public:
     }
 
     inline static double seconds() {
-      return ticksToNanos(getTicks()) / double(ONE_BILLION);
+      return nanos() / double(ONE_BILLION);
     }
 
     constexpr static uint64_t nanosToTicks(const uint64_t value, const uint64_t freq) {
@@ -140,10 +139,19 @@ public:
     static constexpr uint64_t ONE_THOUSAND = 1000;
 
     static std::chrono::steady_clock clock;
+    static std::chrono::steady_clock::time_point last_clock_read;
     static std::atomic_uint64_t ticks;
     static uint64_t realtime_nanos;
     static std::atomic<float> realtime_scale;
     static constexpr uint32_t frequency = 100'000'000;
+  };
+
+  class SimulationRuntime {
+  public:
+    static inline uint64_t nanos() { return TimeControl::ticksToNanos(TimeControl::getTicks()); }
+    static inline uint64_t micros() { return TimeControl::ticksToNanos(TimeControl::getTicks()) / TimeControl::ONE_THOUSAND; }
+    static inline uint64_t millis() { return TimeControl::ticksToNanos(TimeControl::getTicks()) / TimeControl::ONE_MILLION; }
+    static inline double seconds() { return TimeControl::ticksToNanos(TimeControl::getTicks()) / TimeControl::ONE_BILLION; }
   };
 
   class Timers {
@@ -192,7 +200,7 @@ public:
     inline static uint64_t timerGetCount(uint8_t timer_id) {
       if (timer_id < timers.size()) {
         //time must pass here for the stepper isr pulse counter (time + 100ns)
-      TimeControl::addTicks(1 + TimeControl::nanosToTicks(100, timers[timer_id].timer_frequency));
+        TimeControl::addTicks(1 + TimeControl::nanosToTicks(100, timers[timer_id].timer_frequency));
         return timers[timer_id].get_count(TimeControl::getTicks(), TimeControl::frequency);
       }
       return 0;

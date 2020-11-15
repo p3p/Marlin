@@ -6,6 +6,7 @@
 #include "execution_control.h"
 
 std::chrono::steady_clock Kernel::TimeControl::clock;
+std::chrono::steady_clock::time_point Kernel::TimeControl::last_clock_read(Kernel::TimeControl::clock.now());
 std::atomic_uint64_t Kernel::TimeControl::ticks{0};
 uint64_t Kernel::TimeControl::realtime_nanos = 0;
 std::atomic<float> Kernel::TimeControl::realtime_scale = 1.0;
