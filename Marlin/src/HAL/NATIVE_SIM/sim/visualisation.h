@@ -171,7 +171,9 @@ public:
   PrintBed print_bed;
   glm::vec3 bed_level_point[3] = {{100,200,0},{0,0,0},{200,0,0}};
   BedProbe probe;
-  FilamentRunoutSensor runout_sensor;
+  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+    FilamentRunoutSensor runout_sensor;
+  #endif
 
   float ui_realtime_scale = 0.0f;
 
