@@ -214,6 +214,10 @@ public:
     static std::array<KernelTimer, 4> timers;
   };
 
+  // To avoid issues with global initialization order, this should be called with a true value
+  // to enable operation of execute_loop.
+  static bool is_initialized(bool known_state = false);
+
   //execute highest priority thread with closest interrupt, return true if something was executed
   static bool execute_loop(uint64_t max_end_ticks = std::numeric_limits<uint64_t>::max());
   // if a thread wants to wait, see what should be executed during that wait
