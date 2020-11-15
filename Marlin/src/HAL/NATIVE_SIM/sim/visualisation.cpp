@@ -28,8 +28,11 @@ Visualisation::Visualisation() :
   z_axis(Z_ENABLE_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN, INVERT_Z_DIR),
   extruder0(E0_ENABLE_PIN, E0_DIR_PIN, E0_STEP_PIN, P_NC, P_NC, INVERT_E0_DIR),
   print_bed({X_BED_SIZE, Y_BED_SIZE}),
-  probe(pin_type(Z_MIN_PROBE_PIN), NOZZLE_TO_PROBE_OFFSET, effector_pos, print_bed),
-  runout_sensor(FIL_RUNOUT1_PIN, FIL_RUNOUT_STATE) {
+  probe(pin_type(Z_MIN_PROBE_PIN), NOZZLE_TO_PROBE_OFFSET, effector_pos, print_bed)
+  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+  , runout_sensor(FIL_RUNOUT1_PIN, FIL_RUNOUT_STATE)
+  #endif
+  {
     Gpio::attach(x_axis.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
     Gpio::attach(x_axis.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
     Gpio::attach(x_axis.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
@@ -615,7 +618,9 @@ void Visualisation::ui_info_callback(UiWindow* w) {
   ImGui::SliderFloat("bed level(front right)", &bed_level_point[2].z, -5.0f, 5.0f);
   print_bed.build_3point(bed_level_point[0], bed_level_point[1], bed_level_point[2]);
   ImGui::Separator();
-  runout_sensor.ui_info_callback(w);
+  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+    runout_sensor.ui_info_callback(w);
+  #endif
 }
 
 #endif
