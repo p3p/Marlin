@@ -195,7 +195,7 @@ def search_compiler():
 
   # See if the environment provides a default compiler
 	try:
-		gcc = int(env.GetProjectOption('custom_deps_gcc'))
+		gcc = env.GetProjectOption('custom_deps_gcc')
 	except:
 		gcc = "g++"
 
