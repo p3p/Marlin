@@ -11,7 +11,11 @@
 
 #include "XPT2046Device.h"
 #include "../../tft/xpt2046.h"
-#include "src/lcd/tft/touch.h"
+#if ENABLED(TOUCH_SCREEN)
+  #include "src/lcd/tft/touch.h"
+#else
+  #define MINIMUM_HOLD_TIME 15
+#endif
 
 void XPT2046Device::onByteReceived(uint8_t _byte) {
   SPISlavePeripheral::onByteReceived(_byte);
