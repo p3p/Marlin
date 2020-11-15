@@ -10,7 +10,7 @@
 class ST7920Device: public Peripheral {
 public:
   enum KeyName {
-    KILL_BUTTON, ENCODER_BUTTON, COUNT
+    KILL_BUTTON, ENCODER_BUTTON, BACK_BUTTON, COUNT
   };
 
   struct Command {
@@ -20,7 +20,7 @@ public:
     uint8_t data = 0;
   };
 
-  ST7920Device(pin_type clk, pin_type mosi, pin_type cs, pin_type beeper, pin_type enc1, pin_type enc2, pin_type enc_but, pin_type kill);
+  ST7920Device(pin_type clk, pin_type mosi, pin_type cs, pin_type beeper, pin_type enc1, pin_type enc2, pin_type enc_but, pin_type back, pin_type kill);
   virtual ~ST7920Device();
   void process_command(Command cmd);
   void update();
@@ -29,7 +29,7 @@ public:
 
   static constexpr uint32_t width = 128, height = 64;
 
-  pin_type clk_pin, mosi_pin, cs_pin, beeper_pin, enc1_pin, enc2_pin, enc_but_pin, kill_pin;
+  pin_type clk_pin, mosi_pin, cs_pin, beeper_pin, enc1_pin, enc2_pin, enc_but_pin, back_pin, kill_pin;
 
   bool extended_instruction_set = false;
 

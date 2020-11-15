@@ -15,8 +15,8 @@
 
 #include "ST7920Device.h"
 
-ST7920Device::ST7920Device(pin_type clk, pin_type mosi, pin_type cs,  pin_type beeper, pin_type enc1, pin_type enc2, pin_type enc_but, pin_type kill)
-  : clk_pin(clk), mosi_pin(mosi), cs_pin(cs), beeper_pin(beeper), enc1_pin(enc1), enc2_pin(enc2), enc_but_pin(enc_but), kill_pin(kill) {
+ST7920Device::ST7920Device(pin_type clk, pin_type mosi, pin_type cs, pin_type beeper, pin_type enc1, pin_type enc2, pin_type enc_but, pin_type back, pin_type kill)
+  : clk_pin(clk), mosi_pin(mosi), cs_pin(cs), beeper_pin(beeper), enc1_pin(enc1), enc2_pin(enc2), enc_but_pin(enc_but), back_pin(back), kill_pin(kill) {
 
   Gpio::attach(clk_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(cs_pin, [this](GpioEvent& event){ this->interrupt(event); });
@@ -24,6 +24,7 @@ ST7920Device::ST7920Device(pin_type clk, pin_type mosi, pin_type cs,  pin_type b
   Gpio::attach(enc1_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(enc2_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(enc_but_pin, [this](GpioEvent& event){ this->interrupt(event); });
+  Gpio::attach(back_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(kill_pin, [this](GpioEvent& event){ this->interrupt(event); });
 
   glGenTextures(1, &texture_id);
@@ -154,6 +155,8 @@ void ST7920Device::interrupt(GpioEvent& ev) {
     Gpio::pin_map[kill_pin].value = !key_pressed[KeyName::KILL_BUTTON];
   } else if (ev.pin_id == enc_but_pin) {
     Gpio::pin_map[enc_but_pin].value = !key_pressed[KeyName::ENCODER_BUTTON];
+  } else if (ev.pin_id == back_pin) {
+    Gpio::pin_map[back_pin].value = !key_pressed[KeyName::BACK_BUTTON];
   } else if (ev.pin_id == enc1_pin || ev.pin_id == enc2_pin) {
     const uint8_t encoder_state = encoder_position % 4;
     Gpio::pin_map[enc1_pin].value = encoder_table[encoder_state] & 0x01;
@@ -169,6 +172,7 @@ void ST7920Device::ui_callback(UiWindow* window) {
 
     key_pressed[KeyName::KILL_BUTTON]    = ImGui::IsKeyDown(SDL_SCANCODE_K);
     key_pressed[KeyName::ENCODER_BUTTON] = ImGui::IsKeyDown(SDL_SCANCODE_SPACE) || ImGui::IsKeyDown(SDL_SCANCODE_RETURN) || ImGui::IsKeyDown(SDL_SCANCODE_RIGHT);
+    key_pressed[KeyName::BACK_BUTTON]    = ImGui::IsKeyDown(SDL_SCANCODE_LEFT);
 
     // Turn keypresses (and repeat) into encoder clicks
     if (up_held) { up_held--; encoder_position--; }

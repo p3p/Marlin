@@ -23,7 +23,7 @@ public:
     std::vector<uint8_t> data;
   };
 
-  ST7796Device(pin_type clk, pin_type miso, pin_type mosi, pin_type tft_cs, pin_type touch_cs, pin_type dc, pin_type beeper, pin_type enc1, pin_type enc2, pin_type enc_but, pin_type kill);
+  ST7796Device(pin_type clk, pin_type miso, pin_type mosi, pin_type tft_cs, pin_type touch_cs, pin_type dc, pin_type beeper, pin_type enc1, pin_type enc2, pin_type enc_but, pin_type back, pin_type kill);
   virtual ~ST7796Device();
   void process_command(Command cmd);
   void update();
@@ -35,7 +35,7 @@ public:
 
   static constexpr uint32_t width = 480, height = 320;
 
-  pin_type dc_pin, beeper_pin, enc1_pin, enc2_pin, enc_but_pin, kill_pin;
+  pin_type dc_pin, beeper_pin, enc1_pin, enc2_pin, enc_but_pin, back_pin, kill_pin;
 
   uint8_t command = 0;
   std::vector<uint8_t> data;
