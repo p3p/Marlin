@@ -6,8 +6,7 @@
 #include <random>
 #include "Gpio.h"
 
-#include <GL/glew.h>
-#include <GL/gl.h>
+#include <gl.h>
 
 #include "ST7796Device.h"
 

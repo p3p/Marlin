@@ -14,18 +14,17 @@ Import("env")
 env['PROGNAME'] = "MarlinSimulator"
 
 #
-# Silence half of the ranlib warnings. (No equivalent for 'ARFLAGS')
-#
-
-env['RANLIBFLAGS'] += [ "-no_warning_for_no_symbols" ]
-
-#
 # If Xcode is installed add the path to its Frameworks folder,
 # or if Mesa is installed try to use its GL/gl.h.
 #
 
 import sys
 if sys.platform == 'darwin':
+
+  #
+  # Silence half of the ranlib warnings. (No equivalent for 'ARFLAGS')
+  #
+  env['RANLIBFLAGS'] += [ "-no_warning_for_no_symbols" ]
 
   # Default paths for Xcode and a lucky GL/gl.h dropped by Mesa
   xcode_path = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks"

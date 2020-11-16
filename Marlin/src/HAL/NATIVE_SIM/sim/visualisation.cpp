@@ -32,20 +32,20 @@ Visualisation::Visualisation() :
   #if ENABLED(FILAMENT_RUNOUT_SENSOR)
   , runout_sensor(FIL_RUNOUT1_PIN, FIL_RUNOUT_STATE)
   #endif
-  {
-    Gpio::attach(x_axis.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-    Gpio::attach(x_axis.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-    Gpio::attach(x_axis.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-    Gpio::attach(y_axis.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-    Gpio::attach(y_axis.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-    Gpio::attach(y_axis.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-    Gpio::attach(z_axis.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-    Gpio::attach(z_axis.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-    Gpio::attach(z_axis.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-    Gpio::attach(extruder0.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-    Gpio::attach(extruder0.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-    Gpio::attach(extruder0.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-  }
+{
+  Gpio::attach(x_axis.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+  Gpio::attach(x_axis.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+  Gpio::attach(x_axis.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+  Gpio::attach(y_axis.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+  Gpio::attach(y_axis.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+  Gpio::attach(y_axis.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+  Gpio::attach(z_axis.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+  Gpio::attach(z_axis.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+  Gpio::attach(z_axis.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+  Gpio::attach(extruder0.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+  Gpio::attach(extruder0.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+  Gpio::attach(extruder0.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+}
 
 Visualisation::~Visualisation() {
   destroy();
@@ -571,8 +571,8 @@ void Visualisation::ui_info_callback(UiWindow* w) {
   remainder = (remainder % (Kernel::TimeControl::ONE_BILLION * 60));
   uint64_t seconds = remainder / (Kernel::TimeControl::ONE_BILLION);
   remainder = remainder % (Kernel::TimeControl::ONE_BILLION);
-  ImGui::Text("%02lld:%02lld:%02lld.%lld", hours, mins, seconds, remainder);
-  ImGui::Text("ISR timing error: %lldns", Kernel::isr_timing_error.load());
+  ImGui::Text("%02ld:%02ld:%02ld.%09ld", hours, mins, seconds, remainder); //TODO: work around cross platform format string differences
+  ImGui::Text("ISR timing error: %ldns", Kernel::isr_timing_error.load());
 
   // // lock the toggle button until the mode has been changed as it may be blocked
   // bool disabled_toggle = Kernel::timing_mode != Kernel::timing_mode_toggle;
