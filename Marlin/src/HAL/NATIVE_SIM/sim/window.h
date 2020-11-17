@@ -2,8 +2,7 @@
 
 #include <string>
 #include <vector>
-#include <GL/glew.h>
-#include <GL/gl.h>
+#include <gl.h>
 
 enum WindowReturnCode {
   WINDOW_OK,

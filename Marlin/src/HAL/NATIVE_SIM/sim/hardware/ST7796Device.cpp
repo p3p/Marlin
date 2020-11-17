@@ -6,8 +6,7 @@
 #include <random>
 #include "Gpio.h"
 
-#include <GL/glew.h>
-#include <GL/gl.h>
+#include <gl.h>
 
 #include "ST7796Device.h"
 
@@ -17,13 +16,14 @@
 #define ST7796S_RASET      0x2B // Row Address Set
 #define ST7796S_RAMWR      0x2C // Memory Write
 
-ST7796Device::ST7796Device(pin_type clk, pin_type miso, pin_type mosi, pin_type tft_cs, pin_type touch_cs, pin_type dc, pin_type beeper, pin_type enc1, pin_type enc2, pin_type enc_but, pin_type kill)
-  : SPISlavePeripheral(clk, miso, mosi, tft_cs), dc_pin(dc), beeper_pin(beeper), enc1_pin(enc1), enc2_pin(enc2), enc_but_pin(enc_but), kill_pin(kill), touch(clk, miso, mosi, touch_cs)
+ST7796Device::ST7796Device(pin_type clk, pin_type miso, pin_type mosi, pin_type tft_cs, pin_type touch_cs, pin_type dc, pin_type beeper, pin_type enc1, pin_type enc2, pin_type enc_but, pin_type back, pin_type kill)
+  : SPISlavePeripheral(clk, miso, mosi, tft_cs), dc_pin(dc), beeper_pin(beeper), enc1_pin(enc1), enc2_pin(enc2), enc_but_pin(enc_but), back_pin(back), kill_pin(kill), touch(clk, miso, mosi, touch_cs)
   {
   Gpio::attach(dc_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(beeper_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(kill_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(enc_but_pin, [this](GpioEvent& event){ this->interrupt(event); });
+  Gpio::attach(back_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(enc1_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(enc2_pin, [this](GpioEvent& event){ this->interrupt(event); });
 

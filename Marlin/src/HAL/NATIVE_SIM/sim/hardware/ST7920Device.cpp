@@ -6,21 +6,21 @@
 #include <random>
 #include "Gpio.h"
 
-#include <GL/glew.h>
-#include <GL/gl.h>
+#include <gl.h>
 
 #include "ST7920Device.h"
 
-ST7920Device::ST7920Device(pin_type clk, pin_type mosi, pin_type cs,  pin_type beeper, pin_type enc1, pin_type enc2, pin_type enc_but, pin_type kill)
-  : clk_pin(clk), mosi_pin(mosi), cs_pin(cs), beeper_pin(beeper), enc1_pin(enc1), enc2_pin(enc2), enc_but_pin(enc_but), kill_pin(kill) {
+ST7920Device::ST7920Device(pin_type clk, pin_type mosi, pin_type cs, pin_type beeper, pin_type enc1, pin_type enc2, pin_type enc_but, pin_type back, pin_type kill)
+  : clk_pin(clk), mosi_pin(mosi), cs_pin(cs), beeper_pin(beeper), enc1_pin(enc1), enc2_pin(enc2), enc_but_pin(enc_but), back_pin(back), kill_pin(kill) {
 
   Gpio::attach(clk_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(cs_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(beeper_pin, [this](GpioEvent& event){ this->interrupt(event); });
-  Gpio::attach(kill_pin, [this](GpioEvent& event){ this->interrupt(event); });
-  Gpio::attach(enc_but_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(enc1_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(enc2_pin, [this](GpioEvent& event){ this->interrupt(event); });
+  Gpio::attach(enc_but_pin, [this](GpioEvent& event){ this->interrupt(event); });
+  Gpio::attach(back_pin, [this](GpioEvent& event){ this->interrupt(event); });
+  Gpio::attach(kill_pin, [this](GpioEvent& event){ this->interrupt(event); });
 
   glGenTextures(1, &texture_id);
   glBindTexture(GL_TEXTURE_2D, texture_id);
@@ -36,12 +36,10 @@ ST7920Device::~ST7920Device() {}
 void ST7920Device::process_command(Command cmd) {
   if (cmd.rs) {
     graphic_ram[coordinate[1] + (coordinate[0] * (256 / 8))] = cmd.data;
-    if (++coordinate[1] > 32) {
-      coordinate[1] = 0;
-    }
+    if (++coordinate[1] > 32) coordinate[1] = 0;
     dirty = true;
-
-  } else if (extended_instruction_set) {
+  }
+  else if (extended_instruction_set) {
     if (cmd.data & (1 << 7)) {
       // cmd [7] SET GRAPHICS RAM COORDINATE
       coordinate[coordinate_index++] = cmd.data & 0x7F;
@@ -93,7 +91,8 @@ void ST7920Device::process_command(Command cmd) {
 }
 
 void ST7920Device::update() {
-  static uint8_t buffer[256*64*3] = {};
+  // Double buffer 128x64 in RGB color ?
+  static struct { uint8_t r, g, b; } buffer[256*64] = {};
   auto now = clock.now();
   float delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - last_update).count();
 
@@ -106,15 +105,15 @@ void ST7920Device::update() {
         std::size_t gfxbuf_i = (y * (128 / 8)) + (x / 8);
 
         for (std::size_t j = 0; j < 8; j++) {
-          std::size_t index = ((texture_i * 8) + j) * 3;
-          if (((graphic_ram[gfxbuf_i] >> (7 - j)) & 0x1)) {
-            buffer[index] = 0x85;
-            buffer[index + 1] = 0xA9;
-            buffer[index + 2] = 0xE3;
+          std::size_t index = texture_i * 8 + j;
+          if (TEST(graphic_ram[gfxbuf_i], 7 - j)) {
+            buffer[index].r = 0x81;
+            buffer[index].g = 0xF2;
+            buffer[index].b = 0xFF;
           } else {
-            buffer[index] = 0x0;
-            buffer[index + 1] = 0x0;
-            buffer[index + 2] = 0xF8;
+            buffer[index].r = 0x33;
+            buffer[index].g = 0x01;
+            buffer[index].b = 0xFC;
           }
         }
       }
@@ -127,20 +126,20 @@ void ST7920Device::update() {
 
 void ST7920Device::interrupt(GpioEvent& ev) {
   if (ev.pin_id == clk_pin && ev.event == GpioEvent::FALL && Gpio::pin_map[cs_pin].value){
-    incomming_byte = (incomming_byte << 1) | Gpio::pin_map[mosi_pin].value;
-    if (++incomming_bit_count == 8) {
-      if (incomming_byte_count == 0 && (incomming_byte & 0xF8) != 0xF8) {
-        incomming_byte_count++;
+    incoming_byte = (incoming_byte << 1) | Gpio::pin_map[mosi_pin].value;
+    if (++incoming_bit_count == 8) {
+      if (incoming_byte_count == 0 && (incoming_byte & 0xF8) != 0xF8) {
+        incoming_byte_count++;
       }
-      incomming_cmd[incomming_byte_count++] = incomming_byte;
-      incomming_byte = incomming_bit_count = 0;
-      if (incomming_byte_count == 3) {
-        process_command({(incomming_cmd[0] & 0b100) != 0, (incomming_cmd[0] & 0b010) != 0, uint8_t(incomming_cmd[1] | incomming_cmd[2] >> 4)});
-        incomming_byte_count = 0;
+      incoming_cmd[incoming_byte_count++] = incoming_byte;
+      incoming_byte = incoming_bit_count = 0;
+      if (incoming_byte_count == 3) {
+        process_command({(incoming_cmd[0] & 0b100) != 0, (incoming_cmd[0] & 0b010) != 0, uint8_t(incoming_cmd[1] | incoming_cmd[2] >> 4)});
+        incoming_byte_count = 0;
       }
     }
   } else if (ev.pin_id == cs_pin && ev.event == GpioEvent::RISE) {
-    incomming_bit_count = incomming_byte_count = incomming_byte = 0;
+    incoming_bit_count = incoming_byte_count = incoming_byte = 0;
   } else if (ev.pin_id == beeper_pin) {
     if (ev.event == GpioEvent::RISE) {
       // play sound
@@ -151,25 +150,36 @@ void ST7920Device::interrupt(GpioEvent& ev) {
     Gpio::pin_map[kill_pin].value = !key_pressed[KeyName::KILL_BUTTON];
   } else if (ev.pin_id == enc_but_pin) {
     Gpio::pin_map[enc_but_pin].value = !key_pressed[KeyName::ENCODER_BUTTON];
+  } else if (ev.pin_id == back_pin) {
+    Gpio::pin_map[back_pin].value = !key_pressed[KeyName::BACK_BUTTON];
   } else if (ev.pin_id == enc1_pin || ev.pin_id == enc2_pin) {
-    uint8_t encoder_state = encoder_position % 4;
+    const uint8_t encoder_state = encoder_position % 4;
     Gpio::pin_map[enc1_pin].value = encoder_table[encoder_state] & 0x01;
     Gpio::pin_map[enc2_pin].value = encoder_table[encoder_state] & 0x02;
   }
 }
 
 void ST7920Device::ui_callback(UiWindow* window) {
+  static long int call_count = 0;
+  static uint8_t up_held = 0, down_held = 0;
+  call_count++;
   if (ImGui::IsWindowFocused()) {
-    key_pressed[KeyName::KILL_BUTTON] = ImGui::IsKeyDown(SDL_SCANCODE_K);
-    key_pressed[KeyName::ENCODER_BUTTON] = ImGui::IsKeyDown(SDL_SCANCODE_SPACE);
-    encoder_position += ImGui::IsKeyDown(SDL_SCANCODE_UP);
-    encoder_position -= ImGui::IsKeyDown(SDL_SCANCODE_DOWN);
+
+    key_pressed[KeyName::KILL_BUTTON]    = ImGui::IsKeyDown(SDL_SCANCODE_K);
+    key_pressed[KeyName::ENCODER_BUTTON] = ImGui::IsKeyDown(SDL_SCANCODE_SPACE) || ImGui::IsKeyDown(SDL_SCANCODE_RETURN) || ImGui::IsKeyDown(SDL_SCANCODE_RIGHT);
+    key_pressed[KeyName::BACK_BUTTON]    = ImGui::IsKeyDown(SDL_SCANCODE_LEFT);
+
+    // Turn keypresses (and repeat) into encoder clicks
+    if (up_held) { up_held--; encoder_position--; }
+    else if (ImGui::IsKeyPressed(SDL_SCANCODE_UP)) up_held = 4;
+    if (down_held) { down_held--; encoder_position++; }
+    else if (ImGui::IsKeyPressed(SDL_SCANCODE_DOWN)) down_held = 4;
+
     if (ImGui::IsWindowHovered()) {
-      key_pressed[KeyName::ENCODER_BUTTON] = (ImGui::IsMouseClicked(0) | ImGui::IsKeyDown(SDL_SCANCODE_SPACE));
+      key_pressed[KeyName::ENCODER_BUTTON] |= ImGui::IsMouseClicked(0);
       encoder_position += ImGui::GetIO().MouseWheel > 0 ? 1 : ImGui::GetIO().MouseWheel < 0 ? -1 : 0;
     }
   }
 }
 
 #endif
-

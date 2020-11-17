@@ -6,8 +6,7 @@
 #include <random>
 #include "Gpio.h"
 
-#include <GL/glew.h>
-#include <GL/gl.h>
+#include <gl.h>
 
 #include "XPT2046Device.h"
 #include "../../tft/xpt2046.h"
