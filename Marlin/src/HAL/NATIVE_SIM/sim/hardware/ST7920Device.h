@@ -1,6 +1,8 @@
 #pragma once
 
 #include <SDL2/SDL.h>
+#include <glm/glm.hpp>
+
 #include "../user_interface.h"
 
 #include <list>
@@ -37,11 +39,11 @@ public:
   uint8_t incoming_bit_count = 0;
   uint8_t incoming_byte_count = 0;
   uint8_t incoming_cmd[3] = {};
-  std::deque<Command> cmd_in;
 
-  static constexpr uint8_t display_ram_size = 64 * (16 / 8);
-  uint8_t display_ram[display_ram_size] = {};  // 64 x 16bit
-  uint16_t display_ram_index = 0;
+  // Unused by current emulation
+  // static constexpr uint8_t display_ram_size = 64 * (16 / 8);
+  // uint8_t display_ram[display_ram_size] = {};  // 64 x 16bit
+  // uint16_t display_ram_index = 0;
 
   static constexpr uint16_t graphic_ram_size = 64 * (256 / 8);
   uint8_t graphic_ram[graphic_ram_size] = {}; // 64 x 256bit
@@ -63,5 +65,8 @@ public:
   std::chrono::steady_clock::time_point last_update;
   float scaler;
   GLuint texture_id;
+  glm::vec<3, uint8_t> texture_date[128*64] = {};
 
+  glm::ivec3 forground_color = {0x81, 0xF2, 0xFF};
+  glm::ivec3 background_color = {0x33, 0x01, 0xFC};
 };

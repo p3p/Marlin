@@ -91,35 +91,22 @@ void ST7920Device::process_command(Command cmd) {
 }
 
 void ST7920Device::update() {
-  // Double buffer 128x64 in RGB color ?
-  static struct { uint8_t r, g, b; } buffer[256*64] = {};
   auto now = clock.now();
   float delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - last_update).count();
 
   if (dirty && delta > 1.0 / 30.0) {
     last_update = now;
-    for (std::size_t x = 0; x < 128; x++) {
-      for (std::size_t y = 0; y < 128; y+=2) {
-
-        std::size_t texture_i = ((y / 2) * (128 / 8)) + (x / 8);
-        std::size_t gfxbuf_i = (y * (128 / 8)) + (x / 8);
-
+    for (std::size_t x = 0; x < 128; x += 8) {                 // ST7920 graphics ram has 256 bit horizontal resolution, the second 128bit is unused
+      for (std::size_t y = 0; y < 64; y++) {                   // 64 bit vertical resolution
+        std::size_t texture_index = (y * 128) + x;             // indexed by pixel coordinate
+        std::size_t graphic_ram_index = (y * 32) + (x / 8);    // indexed by byte (8 horizontal pixels), 32 byte (256 pixel) stride per row
         for (std::size_t j = 0; j < 8; j++) {
-          std::size_t index = texture_i * 8 + j;
-          if (TEST(graphic_ram[gfxbuf_i], 7 - j)) {
-            buffer[index].r = 0x81;
-            buffer[index].g = 0xF2;
-            buffer[index].b = 0xFF;
-          } else {
-            buffer[index].r = 0x33;
-            buffer[index].g = 0x01;
-            buffer[index].b = 0xFC;
-          }
+          texture_date[texture_index + j] = TEST(graphic_ram[graphic_ram_index], 7 - j) ? forground_color :  background_color;
         }
       }
     }
     glBindTexture(GL_TEXTURE_2D, texture_id);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 128, 64, 0, GL_RGB, GL_UNSIGNED_BYTE, buffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 128, 64, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_date);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 }
