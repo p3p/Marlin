@@ -275,7 +275,7 @@ void Visualisation::create() {
     }
   }
 
-  camera = { {37.0f, 121.0f, 129.0f}, {-192.0f, -25.0, 0.0f}, {0.0f, 1.0f, 0.0f}, float(100) / float(100), glm::radians(45.0f), 0.1f, 1000.0f};
+  camera = { {37.0f, 121.0f, 129.0f}, {-192.0f, -25.0, 0.0f}, {0.0f, 1.0f, 0.0f}, float(100) / float(100), glm::radians(45.0f), 0.1f, 2000.0f};
   camera.generate();
 
   print_bed.build_3point(bed_level_point[0], bed_level_point[1], bed_level_point[2]);

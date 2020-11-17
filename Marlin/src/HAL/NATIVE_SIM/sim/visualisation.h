@@ -23,6 +23,8 @@
 #include "window.h"
 #include "user_interface.h"
 
+constexpr glm::ivec2 build_plate_dimension{X_BED_SIZE, Y_BED_SIZE};
+
 using millisec = std::chrono::duration<float, std::milli>;
 
 typedef enum t_attrib_id
@@ -169,7 +171,7 @@ public:
   LinearAxis z_axis;
   LinearAxis extruder0;
   PrintBed print_bed;
-  glm::vec3 bed_level_point[3] = {{100,200,0},{0,0,0},{200,0,0}};
+  glm::vec3 bed_level_point[3] = {{build_plate_dimension.x / 2, build_plate_dimension.y,0},{0,0,0},{build_plate_dimension.x,0,0}};
   BedProbe probe;
   #if ENABLED(FILAMENT_RUNOUT_SENSOR)
     FilamentRunoutSensor runout_sensor;
@@ -239,13 +241,13 @@ public:
        0.5, 0.5, 0.5, 0.0, 0.0, 0.0, 0, 0, 1, 1,
 
       // bed
-      200, 0, -200, 0.0, 1.0, 0.0,  0.5, 0.5, 0.5, 1,
-      0, 0, -200, 0.0, 1.0, 0.0,  0.5, 0.5, 0.5, 1,
+      build_plate_dimension.x, 0, -build_plate_dimension.y, 0.0, 1.0, 0.0,  0.5, 0.5, 0.5, 1,
+      0, 0, -build_plate_dimension.y, 0.0, 1.0, 0.0,  0.5, 0.5, 0.5, 1,
       0, 0, 0, 0.0, 1.0, 0.0,  0.5, 0.5, 0.5, 1,
 
-      200, 0, -200, 0.0, 1.0, 0.0, 0.5, 0.5, 0.5, 1,
+      build_plate_dimension.x, 0, -build_plate_dimension.y, 0.0, 1.0, 0.0, 0.5, 0.5, 0.5, 1,
       0, 0, 0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.5, 1,
-      200, 0, 0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.5, 1,
+      build_plate_dimension.x, 0, 0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.5, 1,
   };
 
 
