@@ -54,6 +54,7 @@ void simulation_main() {
   Kernel::Timers::timerInit(3, 1000000);
   Kernel::Timers::timerStart(3, 500);
   Kernel::Timers::timerEnable(3);
+  Kernel::is_initialized(true);
 
   while(!main_finished) {
     try {
