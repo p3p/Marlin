@@ -674,8 +674,11 @@
         #define SD_DETECT_PIN                 49
         #define KILL_PIN                      41
       #endif
-
     #endif
+
+    // CUSTOM SIMULATOR INPUTS
+    #define BTN_BACK                            70
+
   #endif // IS_NEWPANEL
 
 #endif // HAS_WIRED_LCD

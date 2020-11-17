@@ -10,7 +10,7 @@
 class ST7920Device: public Peripheral {
 public:
   enum KeyName {
-    KILL_BUTTON, ENCODER_BUTTON, COUNT
+    KILL_BUTTON, ENCODER_BUTTON, BACK_BUTTON, COUNT
   };
 
   struct Command {
@@ -20,24 +20,23 @@ public:
     uint8_t data = 0;
   };
 
-  ST7920Device(pin_type clk, pin_type mosi, pin_type cs, pin_type beeper, pin_type enc1, pin_type enc2, pin_type enc_but, pin_type kill);
+  ST7920Device(pin_type clk, pin_type mosi, pin_type cs, pin_type beeper, pin_type enc1, pin_type enc2, pin_type enc_but, pin_type back, pin_type kill);
   virtual ~ST7920Device();
   void process_command(Command cmd);
   void update();
   void interrupt(GpioEvent& ev);
   void ui_callback(UiWindow* window);
 
-  static constexpr uint32_t width = 128;
-  static constexpr uint32_t height = 64;
+  static constexpr uint32_t width = 128, height = 64;
 
-  pin_type clk_pin, mosi_pin, cs_pin, beeper_pin, enc1_pin, enc2_pin, enc_but_pin, kill_pin;
+  pin_type clk_pin, mosi_pin, cs_pin, beeper_pin, enc1_pin, enc2_pin, enc_but_pin, back_pin, kill_pin;
 
   bool extended_instruction_set = false;
 
-  uint8_t incomming_byte = 0;
-  uint8_t incomming_bit_count = 0;
-  uint8_t incomming_byte_count = 0;
-  uint8_t incomming_cmd[3] = {};
+  uint8_t incoming_byte = 0;
+  uint8_t incoming_bit_count = 0;
+  uint8_t incoming_byte_count = 0;
+  uint8_t incoming_cmd[3] = {};
   std::deque<Command> cmd_in;
 
   static constexpr uint8_t display_ram_size = 64 * (16 / 8);
@@ -56,7 +55,7 @@ public:
   uint8_t coordinate_index = 0;
 
   bool key_pressed[KeyName::COUNT] = {};
-  uint8_t encoder_position = 0.0f;
+  uint8_t encoder_position = 0;
   static constexpr int8_t encoder_table[4] = {1, 3, 2, 0};
 
   bool dirty = true;
