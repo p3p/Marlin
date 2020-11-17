@@ -79,7 +79,7 @@ public:
 
     inline static void realtime_sync() {
       updateRealtime();
-      if (getRealtimeTicks() > getTicks()) {
+      if (getRealtimeTicks() > getTicks() || realtime_scale > 99.0f) {
         realtime_nanos = nanos();
       } else while (getTicks() > getRealtimeTicks()) {
         updateRealtime();
