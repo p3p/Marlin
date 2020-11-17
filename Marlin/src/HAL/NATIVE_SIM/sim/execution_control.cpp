@@ -22,6 +22,12 @@ std::deque<KernelTimer*> Kernel::isr_stack;
 bool Kernel::quit_requested = false;
 std::atomic_uint64_t Kernel::isr_timing_error = 0;
 
+bool Kernel::is_initialized(bool known_state) {
+  static bool is_running = known_state;
+  is_running = is_running || known_state;
+  return is_running;
+}
+
 bool Kernel::execute_loop( uint64_t max_end_ticks) {
   //simulation time lock
   TimeControl::realtime_sync();
@@ -40,7 +46,8 @@ bool Kernel::execute_loop( uint64_t max_end_ticks) {
 
   uint64_t current_ticks = TimeControl::getTicks();
   uint64_t current_priority = std::numeric_limits<uint64_t>::max();
-  if (isr_stack.size()) {
+  auto stack_size = isr_stack.size();
+  if (stack_size) {
     current_priority = isr_stack.back()->priority;
   }
 
@@ -74,22 +81,26 @@ bool Kernel::execute_loop( uint64_t max_end_ticks) {
 
 // if a thread wants to wait, see what should be executed during that wait
 void Kernel::delayCycles(uint64_t cycles) {
-  auto end = TimeControl::getTicks() + cycles;
-  while (execute_loop(end) && TimeControl::getTicks() < end);
-  if (end > TimeControl::getTicks()) TimeControl::setTicks(end);
+  if (is_initialized()) {
+    auto end = TimeControl::getTicks() + cycles;
+    while (execute_loop(end) && TimeControl::getTicks() < end);
+    if (end > TimeControl::getTicks()) TimeControl::setTicks(end);
+  }
 }
 
 // this is needed for when marlin loops idle waiting for an event with no delays (syncronize)
 void Kernel::yield() {
-  if(isr_stack.size() == 0) {
-    // Kernel not started?
-    TimeControl::addTicks(TimeControl::nanosToTicks(100));
-    return;
-  }
-  auto max_yield = isr_stack.back()->next_interrupt(TimeControl::frequency);
-  if(!execute_loop(max_yield)) { // dont wait longer than this threads exec period
-    TimeControl::setTicks(max_yield);
-    isr_stack.back()->source_offset = max_yield; // there was nothing to run, and we now overrun our next cycle.
+  if (is_initialized()) {
+    if(isr_stack.size() == 0) {
+      // Kernel not started?
+      TimeControl::addTicks(TimeControl::nanosToTicks(100));
+      return;
+    }
+    auto max_yield = isr_stack.back()->next_interrupt(TimeControl::frequency);
+    if(!execute_loop(max_yield)) { // dont wait longer than this threads exec period
+      TimeControl::setTicks(max_yield);
+      isr_stack.back()->source_offset = max_yield; // there was nothing to run, and we now overrun our next cycle.
+    }
   }
 }
 
