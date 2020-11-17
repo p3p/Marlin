@@ -15,7 +15,7 @@ extern void marlin_loop();
 extern "C" void TIMER0_IRQHandler();
 extern "C" void TIMER1_IRQHandler();
 extern void SYSTICK_IRQHandler();
-std::array<KernelTimer, 4> Kernel::Timers::timers({KernelTimer{"Stepper ISR", TIMER0_IRQHandler, 1}, {"Temperate ISR", TIMER1_IRQHandler, 10}, {"SysTick", SYSTICK_IRQHandler, 5}, {"Marlin Loop", marlin_loop, 100}});
+std::array<KernelTimer, 4> Kernel::Timers::timers({KernelTimer{"Stepper ISR", TIMER0_IRQHandler, 1}, {"Temperature ISR", TIMER1_IRQHandler, 10}, {"SysTick", SYSTICK_IRQHandler, 5}, {"Marlin Loop", marlin_loop, 100}});
 
 bool Kernel::timers_active = true;
 std::deque<KernelTimer*> Kernel::isr_stack;
