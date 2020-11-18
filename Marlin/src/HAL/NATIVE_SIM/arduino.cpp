@@ -48,7 +48,7 @@ uint64_t micros() {
 }
 
 // This is required for some Arduino libraries we are using
-void delayMicroseconds(uint32_t us) {
+void delayMicroseconds(unsigned long us) {
   Kernel::delayMicros(us);
 }
 

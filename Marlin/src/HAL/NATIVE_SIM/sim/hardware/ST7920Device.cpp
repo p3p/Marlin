@@ -96,17 +96,18 @@ void ST7920Device::update() {
 
   if (dirty && delta > 1.0 / 30.0) {
     last_update = now;
+    dirty = false;
     for (std::size_t x = 0; x < 128; x += 8) {                 // ST7920 graphics ram has 256 bit horizontal resolution, the second 128bit is unused
       for (std::size_t y = 0; y < 64; y++) {                   // 64 bit vertical resolution
         std::size_t texture_index = (y * 128) + x;             // indexed by pixel coordinate
         std::size_t graphic_ram_index = (y * 32) + (x / 8);    // indexed by byte (8 horizontal pixels), 32 byte (256 pixel) stride per row
         for (std::size_t j = 0; j < 8; j++) {
-          texture_date[texture_index + j] = TEST(graphic_ram[graphic_ram_index], 7 - j) ? forground_color :  background_color;
+          texture_data[texture_index + j] = TEST(graphic_ram[graphic_ram_index], 7 - j) ? forground_color :  background_color;
         }
       }
     }
     glBindTexture(GL_TEXTURE_2D, texture_id);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 128, 64, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_date);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 128, 64, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 }
