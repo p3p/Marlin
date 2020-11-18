@@ -22,18 +22,34 @@
 
 class SDCard: public SPISlavePeripheral {
 public:
-  SDCard(pin_type clk, pin_type mosi, pin_type miso, pin_type cs, pin_type sd_detect = -1) : SPISlavePeripheral(clk, mosi, miso, cs), sd_detect(sd_detect) {}
+  SDCard(pin_type clk, pin_type mosi, pin_type miso, pin_type cs, pin_type sd_detect = -1, bool sd_detect_state = true) : SPISlavePeripheral(clk, mosi, miso, cs), sd_detect(sd_detect), sd_detect_state(sd_detect_state) {
+    if (sd_detect > -1) {
+      Gpio::attach(sd_detect, [this](GpioEvent& event){ this->interrupt(event); });
+    }
+  }
   virtual ~SDCard() {};
-
-  pin_type sd_detect;
 
   void update() {}
   void ui_callback(UiWindow* window);
+  void ui_info_callback(UiWindow*) {
+    if (sd_detect > -1) {
+      ImGui::Checkbox("SD Card Present ", (bool*)&sd_present);
+    }
+  }
 
   void onByteReceived(uint8_t _byte) override;
   void onRequestedDataReceived(uint8_t token, uint8_t* _data, size_t count) override;
 
+  void interrupt(GpioEvent &ev) {
+    if (ev.pin_id == sd_detect && ev.event == GpioEvent::GET_VALUE) {
+      Gpio::pin_map[sd_detect].value = sd_present ? sd_detect_state : !sd_detect_state;
+    }
+  }
+
   int32_t currentArg = 0;
   uint8_t buf[1024];
   FILE *fp = nullptr;
+  bool sd_present = true;
+  pin_type sd_detect;
+  bool sd_detect_state = true;
 };

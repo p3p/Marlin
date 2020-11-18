@@ -12,7 +12,7 @@ Application::Application() {
 
   user_interface.addElement<SerialMonitor>("Serial Monitor");
   user_interface.addElement<TextureWindow>("Controller Display", sim.display.texture_id, (float)sim.display.width / (float)sim.display.height, [this](UiWindow* window){ this->sim.display.ui_callback(window); });
-  user_interface.addElement<StatusWindow>("Status", &clear_color, [this](UiWindow* window){ this->sim.vis.ui_info_callback(window); });
+  user_interface.addElement<StatusWindow>("Status", &clear_color, [this](UiWindow* window){ this->sim.ui_info_callback(window); });
   user_interface.addElement<Viewport>("Viewport", [this](UiWindow* window){ this->sim.vis.ui_viewport_callback(window); });
   //user_interface.addElement<GraphWindow>("graphs", sim.display.texture_id, 128.0 / 64.0, std::bind(&Simulation::ui_callback, &sim, std::placeholders::_1));
 }
