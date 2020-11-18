@@ -62,7 +62,7 @@ public:
                   , spi_flash(SCK_PIN, MISO_PIN, MOSI_PIN, W25QXX_CS_PIN, SPI_FLASH_SIZE)
                   #endif
                   #ifdef SDSUPPORT
-                  , sd(SCK_PIN, MISO_PIN, MOSI_PIN, SDSS)
+                  , sd(SCK_PIN, MISO_PIN, MOSI_PIN, SDSS, SD_DETECT_PIN, SD_DETECT_STATE)
                   #endif
                   , display(DISPLAY_PARAM) {}
 
@@ -76,6 +76,13 @@ public:
 
   void ui_callback(UiWindow*) {
 
+  }
+
+  void ui_info_callback(UiWindow *w) {
+    vis.ui_info_callback(w);
+    #ifdef SDSUPPORT
+      sd.ui_info_callback(w);
+    #endif
   }
 
   Heater hotend;

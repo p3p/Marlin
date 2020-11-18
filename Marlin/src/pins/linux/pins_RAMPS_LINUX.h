@@ -408,6 +408,7 @@
   #define BEEPER_PIN                      42
 
   #define TOUCH_CS_PIN                    33
+  #define SD_DETECT_PIN                   41
 
   #define HAS_SPI_FLASH                    1
   #if HAS_SPI_FLASH
@@ -668,6 +669,7 @@
         #define BTN_EN1                       37
         #define BTN_EN2                       35
         #define BTN_ENC                       31
+        #define SD_DETECT_PIN                 41
       #endif
 
       #if ENABLED(G3D_PANEL)
