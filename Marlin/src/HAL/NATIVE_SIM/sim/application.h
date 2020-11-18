@@ -41,6 +41,10 @@ struct GraphWindow : public UiWindow {
   #include "hardware/ST7796Device.h"
   using DisplayDevice = ST7796Device;
   #define DISPLAY_PARAM SCK_PIN, MISO_PIN, MOSI_PIN, TFT_CS_PIN, TOUCH_CS_PIN, TFT_DC_PIN, BEEPER_PIN, BTN_EN1, BTN_EN2, BTN_ENC, BTN_BACK, KILL_PIN
+#elif defined(HAS_MARLINUI_HD44780)
+  #include "hardware/HD44780Device.h"
+  using DisplayDevice = HD44780Device;
+  #define DISPLAY_PARAM LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7, BEEPER_PIN, BTN_EN1, BTN_EN2, BTN_ENC, BTN_BACK, KILL_PIN
 #else
   #include "hardware/ST7920Device.h"
   using DisplayDevice = ST7920Device;
