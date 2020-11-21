@@ -11,6 +11,8 @@
 #include "HD44780Device.h"
 #include "HD44780DeviceROM.h"
 
+#include <src/inc/MarlinConfig.h>
+
 HD44780Device::HD44780Device(pin_type rs, pin_type en, pin_type d4, pin_type d5, pin_type d6, pin_type d7, pin_type beeper, pin_type enc1, pin_type enc2, pin_type enc_but, pin_type back, pin_type kill)
   : rs_pin(rs), en_pin(en), d4_pin(d4), d5_pin(d5), d6_pin(d6), d7_pin(d7), beeper_pin(beeper), enc1_pin(enc1), enc2_pin(enc2), enc_but_pin(enc_but), back_pin(back), kill_pin(kill) {
 
@@ -38,6 +40,14 @@ HD44780Device::HD44780Device(pin_type rs, pin_type en, pin_type d4, pin_type d5,
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glBindTexture(GL_TEXTURE_2D, 0);
+
+  #if DISPLAY_CHARSET_HD44780 == JAPANESE
+    active_rom = hd44780_a00_rom;
+  #elif DISPLAY_CHARSET_HD44780 == WESTERN
+    active_rom = hd44780_a02_rom;
+  #elif
+    #error Unavailable HD44780 Character ROM
+  #endif
 }
 
 HD44780Device::~HD44780Device() {}
