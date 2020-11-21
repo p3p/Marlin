@@ -113,8 +113,8 @@ void ST7920Device::update() {
 }
 
 void ST7920Device::interrupt(GpioEvent& ev) {
-  if (ev.pin_id == clk_pin && ev.event == GpioEvent::FALL && Gpio::pin_map[cs_pin].value){
-    incoming_byte = (incoming_byte << 1) | Gpio::pin_map[mosi_pin].value;
+  if (ev.pin_id == clk_pin && ev.event == GpioEvent::FALL && Gpio::get_pin_value(cs_pin)){
+    incoming_byte = (incoming_byte << 1) | Gpio::get_pin_value(mosi_pin);
     if (++incoming_bit_count == 8) {
       if (incoming_byte_count == 0 && (incoming_byte & 0xF8) != 0xF8) {
         incoming_byte_count++;
@@ -135,15 +135,15 @@ void ST7920Device::interrupt(GpioEvent& ev) {
       // stop sound
     }
   } else if (ev.pin_id == kill_pin) {
-    Gpio::pin_map[kill_pin].value = !key_pressed[KeyName::KILL_BUTTON];
+    Gpio::set_pin_value(kill_pin,  !key_pressed[KeyName::KILL_BUTTON]);
   } else if (ev.pin_id == enc_but_pin) {
-    Gpio::pin_map[enc_but_pin].value = !key_pressed[KeyName::ENCODER_BUTTON];
+    Gpio::set_pin_value(enc_but_pin,  !key_pressed[KeyName::ENCODER_BUTTON]);
   } else if (ev.pin_id == back_pin) {
-    Gpio::pin_map[back_pin].value = !key_pressed[KeyName::BACK_BUTTON];
+    Gpio::set_pin_value(back_pin,  !key_pressed[KeyName::BACK_BUTTON]);
   } else if (ev.pin_id == enc1_pin || ev.pin_id == enc2_pin) {
     const uint8_t encoder_state = encoder_position % 4;
-    Gpio::pin_map[enc1_pin].value = encoder_table[encoder_state] & 0x01;
-    Gpio::pin_map[enc2_pin].value = encoder_table[encoder_state] & 0x02;
+    Gpio::set_pin_value(enc1_pin,  encoder_table[encoder_state] & 0x01);
+    Gpio::set_pin_value(enc2_pin,  encoder_table[encoder_state] & 0x02);
   }
 }
 

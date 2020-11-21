@@ -11,7 +11,7 @@ public:
 
   void interrupt(GpioEvent &ev) {
     if (ev.pin_id == runout_pin && ev.event == GpioEvent::GET_VALUE) {
-      Gpio::pin_map[runout_pin].value = filament_present ? !runtout_trigger_value : runtout_trigger_value;
+      Gpio::set_pin_value(runout_pin, filament_present ? !runtout_trigger_value : runtout_trigger_value);
     }
   }
 

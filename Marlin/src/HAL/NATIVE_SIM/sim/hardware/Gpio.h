@@ -99,7 +99,16 @@ class Gpio {
 public:
 
   static const pin_type pin_count = 255;
-  static pin_data pin_map[pin_count+1];
+
+  static void set_pin_value(pin_type pin, uint16_t value) {
+    if (!valid_pin(pin)) return;
+    pin_map[pin].value = value;
+  }
+
+  static uint16_t get_pin_value(pin_type pin) {
+    if (!valid_pin(pin)) return 0;
+    return pin_map[pin].value;
+  }
 
   static bool valid_pin(pin_type pin) {
     return pin >= 0 && pin <= pin_count;
@@ -164,4 +173,7 @@ public:
     if (!valid_pin(pin)) return false;
     return pin_map[pin].attach(args...);
   }
+
+private:
+  static pin_data pin_map[pin_count + 1];
 };

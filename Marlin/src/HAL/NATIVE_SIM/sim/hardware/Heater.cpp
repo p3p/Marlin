@@ -93,7 +93,7 @@ void Heater::interrupt(GpioEvent& ev) {
   } else if (ev.event == ev.GET_VALUE && ev.pin_id == adc_pin) {
     double thermistor_resistance = temperature_to_resistance(hotend_temperature);
     uint32_t adc_reading = (uint32_t)((((1U << adc_resolution) -1)  * thermistor_resistance) / (adc_pullup_resistance + thermistor_resistance));
-    Gpio::pin_map[adc_pin].value = adc_reading;
+    Gpio::set_pin_value(adc_pin, adc_reading);
   }
 }
 

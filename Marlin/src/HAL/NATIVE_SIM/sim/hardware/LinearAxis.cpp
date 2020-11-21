@@ -39,8 +39,8 @@ LinearAxis::LinearAxis(pin_type enable, pin_type dir, pin_type step, pin_type en
   position = rand() % ((max_position - 40) - min_position) + (min_position + 20);
   last_update = Kernel::TimeControl::getTicks();
 
-  Gpio::pin_map[min_pin].value = (position < min_position);
-  Gpio::pin_map[max_pin].value = (position > max_position);
+  Gpio::set_pin_value(min_pin, (position < min_position));
+  Gpio::set_pin_value(max_pin, (position > max_position));
 }
 
 LinearAxis::~LinearAxis() {
@@ -53,13 +53,13 @@ void LinearAxis::update() {
 
 void LinearAxis::interrupt(GpioEvent& ev) {
   if (ev.pin_id == min_pin || ev.pin_id == max_pin || ev.pin_id == step_pin) { // interested in event //todo: better interface for the visualiser
-    Gpio::pin_map[min_pin].value = (position < min_position);
-    Gpio::pin_map[max_pin].value = (position > max_position);
+    Gpio::set_pin_value(min_pin, (position < min_position));
+    Gpio::set_pin_value(max_pin, (position > max_position));
 
-    if (ev.pin_id == step_pin && !Gpio::pin_map[enable_pin].value){
+    if (ev.pin_id == step_pin && !Gpio::get_pin_value(enable_pin)){
       if (ev.event == GpioEvent::RISE) {
         last_update = ev.timestamp;
-        position += (Gpio::pin_map[dir_pin].value > 0 ? 1 : -1) * invert_travel;
+        position += (Gpio::get_pin_value(dir_pin) > 0 ? 1 : -1) * invert_travel;
       }
     }
   }

@@ -17,7 +17,7 @@ HD44780Device::HD44780Device(pin_type rs, pin_type en, pin_type d4, pin_type d5,
   : rs_pin(rs), en_pin(en), d4_pin(d4), d5_pin(d5), d6_pin(d6), d7_pin(d7), beeper_pin(beeper), enc1_pin(enc1), enc2_pin(enc2), enc_but_pin(enc_but), back_pin(back), kill_pin(kill) {
 
   Gpio::attach(rs_pin, [this](GpioEvent& event){ this->interrupt(event); });
-  data_is_command = !Gpio::pin_map[rs_pin].value; // make sure the initial state is updated
+  data_is_command = !Gpio::get_pin_value(rs_pin); // make sure the initial state is updated
   Gpio::attach(en_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(d4_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(d5_pin, [this](GpioEvent& event){ this->interrupt(event); });
@@ -126,7 +126,7 @@ void HD44780Device::update() {
           if (ddram_buffer[index] < 0x10) {
             charset_base = state.character_size == 8 ? (ddram_buffer[index] & 0x07) * 8 : ((ddram_buffer[index] >> 1) * 0x03) * 16;
           } else charset_base = ddram_buffer[index] * 0x10;
-          uint8_t* charset = (ddram_buffer[index] < 0x10) ? cgram_buffer : hd44780_a00_rom;
+          uint8_t* charset = (ddram_buffer[index] < 0x10) ? cgram_buffer : active_rom;
 
           uint16_t x = line_xindex > 19 ? line_xindex - 20 : line_xindex;
           uint16_t y = (line == 1) | ((line_xindex > 19) << 1);
@@ -152,7 +152,7 @@ void HD44780Device::update() {
 void HD44780Device::interrupt(GpioEvent& ev) {
   if(ev.pin_id == en_pin && ev.event == GpioEvent::RISE) {
     //read the bus
-    data_byte |= (Gpio::pin_map[d7_pin].value << 3 | Gpio::pin_map[d6_pin].value << 2 | Gpio::pin_map[d5_pin].value << 1 | Gpio::pin_map[d4_pin].value) << (4 * !data_low_nibble);
+    data_byte |= (Gpio::get_pin_value(d7_pin) << 3 | Gpio::get_pin_value(d6_pin) << 2 | Gpio::get_pin_value(d5_pin) << 1 |Gpio::get_pin_value(d4_pin)) << (4 * !data_low_nibble);
     data_low_nibble = !data_low_nibble;
     if (!data_low_nibble) {
       dirty = true; // can't tell when the data transmission has ended? so set dirty on all received bytes
@@ -181,15 +181,15 @@ void HD44780Device::interrupt(GpioEvent& ev) {
       // stop sound
     }
   } else if (ev.pin_id == kill_pin) {
-    Gpio::pin_map[kill_pin].value = !key_pressed[KeyName::KILL_BUTTON];
+    Gpio::set_pin_value(kill_pin, !key_pressed[KeyName::KILL_BUTTON]);
   } else if (ev.pin_id == enc_but_pin) {
-    Gpio::pin_map[enc_but_pin].value = !key_pressed[KeyName::ENCODER_BUTTON];
+    Gpio::set_pin_value(enc_but_pin, !key_pressed[KeyName::ENCODER_BUTTON]);
   } else if (ev.pin_id == back_pin) {
-    Gpio::pin_map[back_pin].value = !key_pressed[KeyName::BACK_BUTTON];
+    Gpio::set_pin_value(back_pin, !key_pressed[KeyName::BACK_BUTTON]);
   } else if (ev.pin_id == enc1_pin || ev.pin_id == enc2_pin) {
     const uint8_t encoder_state = encoder_position % 4;
-    Gpio::pin_map[enc1_pin].value = encoder_table[encoder_state] & 0x01;
-    Gpio::pin_map[enc2_pin].value = encoder_table[encoder_state] & 0x02;
+    Gpio::set_pin_value(enc1_pin, encoder_table[encoder_state] & 0x01);
+    Gpio::set_pin_value(enc2_pin, encoder_table[encoder_state] & 0x02);
   }
 }
 
