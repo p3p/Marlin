@@ -98,4 +98,6 @@ public:
   glm::ivec3 forground_color = {0x81, 0xF2, 0xFF};
   glm::ivec3 background_color = {0x33, 0x01, 0xFC};
   glm::ivec3 display_color = {0x23, 0x2A, 0xFC};
+
+  uint8_t* active_rom = nullptr;
 };
