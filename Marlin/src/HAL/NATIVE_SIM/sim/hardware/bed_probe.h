@@ -10,7 +10,7 @@ public:
   }
 
   void interrupt(GpioEvent& event) {
-    Gpio::pin_map[event.pin_id].value = position.y < bed.calculate_z({position.x + offset.x, (-position.z) + offset.y}) - offset.z;
+    Gpio::set_pin_value(event.pin_id, position.y < bed.calculate_z({position.x + offset.x, (-position.z) + offset.y}) - offset.z);
   }
 
   glm::vec3 offset;

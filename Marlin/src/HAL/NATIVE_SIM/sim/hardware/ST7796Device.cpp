@@ -102,7 +102,7 @@ void ST7796Device::onEndTransaction() {
 
 void ST7796Device::onByteReceived(uint8_t _byte) {
   SPISlavePeripheral::onByteReceived(_byte);
-  if (Gpio::pin_map[dc_pin].value) {
+  if (Gpio::get_pin_value(dc_pin)) {
     //data
     data.push_back(_byte);
     //direct write to memory, to optimize

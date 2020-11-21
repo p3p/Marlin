@@ -42,7 +42,7 @@ public:
 
   void interrupt(GpioEvent &ev) {
     if (ev.pin_id == sd_detect && ev.event == GpioEvent::GET_VALUE) {
-      Gpio::pin_map[sd_detect].value = sd_present ? sd_detect_state : !sd_detect_state;
+      Gpio::set_pin_value(sd_detect, sd_present ? sd_detect_state : !sd_detect_state);
     }
   }
 

@@ -21,7 +21,7 @@ void SPISlavePeripheral::onBeginTransaction() {
 void SPISlavePeripheral::transmitCurrentBit() {
   // MSB
   const uint8_t b = (outgoing_byte >> (7 - outgoing_bit_count)) & 1;
-  Gpio::pin_map[miso_pin].value = b;
+  Gpio::set_pin_value(miso_pin,  b);
   onBitSent(b);
   if (++outgoing_bit_count == 8) {
     onByteSent(outgoing_byte);
@@ -131,14 +131,14 @@ void SPISlavePeripheral::spiInterrupt(GpioEvent& ev) {
     return;
   }
 
-  if (Gpio::pin_map[cs_pin].value != 0 || !insideTransaction) return;
+  if (Gpio::get_pin_value(cs_pin) != 0 || !insideTransaction) return;
 
   if (ev.pin_id == clk_pin) {
     // == Read ==
     // When CPOL is 0, data must be read when clock RISE
     // When CPOL is 1, data must be read when clock FALL
     if ((ev.event == GpioEvent::RISE && CPOL == 0) || (ev.event == GpioEvent::FALL && CPOL == 1)) {
-      const uint8_t currentBit = Gpio::pin_map[mosi_pin].value;
+      const uint8_t currentBit = Gpio::get_pin_value(mosi_pin);
       incoming_byte = (incoming_byte << 1) | currentBit;
       onBitReceived(currentBit);
       if (++incoming_bit_count == 8) {
