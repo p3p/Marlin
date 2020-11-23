@@ -225,6 +225,8 @@ public:
   // this was neede for when marlin loops idle waiting for an event with no delays
   static void yield();
 
+  static void execution_break() { debug_break_flag = true; }
+
   //Timers
   inline static void disableInterrupts() {
     timers_active = false;
@@ -254,4 +256,5 @@ public:
   static std::deque<KernelTimer*> isr_stack;
   static bool quit_requested;
   static std::atomic_uint64_t isr_timing_error;
+  static std::atomic_bool debug_break_flag;
 };

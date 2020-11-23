@@ -50,6 +50,7 @@ void marlin_loop() {
 }
 
 void simulation_main() {
+  pthread_setname_np(pthread_self(), "simulation_main");
   // Marlin Loop 500hz
   Kernel::Timers::timerInit(3, 1000000);
   Kernel::Timers::timerStart(3, 500);

@@ -2,6 +2,8 @@
 
 #include <limits>
 
+#include <debugbreak.h>
+
 #include "user_interface.h"
 #include "execution_control.h"
 
@@ -10,6 +12,7 @@ std::chrono::steady_clock::time_point Kernel::TimeControl::last_clock_read(Kerne
 std::atomic_uint64_t Kernel::TimeControl::ticks{0};
 uint64_t Kernel::TimeControl::realtime_nanos = 0;
 std::atomic<float> Kernel::TimeControl::realtime_scale = 1.0;
+std::atomic_bool Kernel::debug_break_flag = false;
 
 extern void marlin_loop();
 extern "C" void TIMER0_IRQHandler();
@@ -29,6 +32,7 @@ bool Kernel::is_initialized(bool known_state) {
 }
 
 bool Kernel::execute_loop( uint64_t max_end_ticks) {
+  if (debug_break_flag) { debug_break(); debug_break_flag = false; }
   //simulation time lock
   TimeControl::realtime_sync();
 

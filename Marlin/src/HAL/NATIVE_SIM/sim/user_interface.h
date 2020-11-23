@@ -11,6 +11,8 @@
 #include <gl.h>
 #include <imgui.h>
 
+#include "execution_control.h"
+
 /**
  * |-----|-----|------|
  * |Stat | LCD |      |
@@ -115,6 +117,8 @@ struct StatusWindow : public UiWindow {
 
     ImGui::SameLine();
     ImGui::Text("counter = %d", counter);
+
+    if (ImGui::Button("Break into Debugger")) Kernel::execution_break();
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();
