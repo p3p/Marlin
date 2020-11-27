@@ -143,7 +143,7 @@ public:
     static std::atomic_uint64_t ticks;
     static uint64_t realtime_nanos;
     static std::atomic<float> realtime_scale;
-    static constexpr uint32_t frequency = 100'000'000;
+    static constexpr uint64_t frequency = 100'000'000;
   };
 
   class SimulationRuntime {
@@ -151,7 +151,7 @@ public:
     static inline uint64_t nanos() { return TimeControl::ticksToNanos(TimeControl::getTicks()); }
     static inline uint64_t micros() { return TimeControl::ticksToNanos(TimeControl::getTicks()) / TimeControl::ONE_THOUSAND; }
     static inline uint64_t millis() { return TimeControl::ticksToNanos(TimeControl::getTicks()) / TimeControl::ONE_MILLION; }
-    static inline double seconds() { return TimeControl::ticksToNanos(TimeControl::getTicks()) / TimeControl::ONE_BILLION; }
+    static inline double seconds() { return TimeControl::ticksToNanos(TimeControl::getTicks()) / (double)TimeControl::ONE_BILLION; }
   };
 
   class Timers {
