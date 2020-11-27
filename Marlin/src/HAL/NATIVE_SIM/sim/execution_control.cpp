@@ -67,7 +67,7 @@ bool Kernel::execute_loop( uint64_t max_end_ticks) {
 
   if (next_isr != nullptr ) {
     if (current_ticks > lowest_isr) {
-      isr_timing_error = current_ticks - lowest_isr;
+      isr_timing_error = TimeControl::ticksToNanos(current_ticks - lowest_isr);
       next_isr->source_offset = current_ticks; // late interrupt
     } else {
       next_isr->source_offset = next_isr->next_interrupt(TimeControl::frequency); // timer was reset when the interrupt fired

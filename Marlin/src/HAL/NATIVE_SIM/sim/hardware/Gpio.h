@@ -100,25 +100,25 @@ public:
 
   static const pin_type pin_count = 255;
 
-  static void set_pin_value(pin_type pin, uint16_t value) {
+  static void set_pin_value(const pin_type pin, const uint16_t value) {
     if (!valid_pin(pin)) return;
     pin_map[pin].value = value;
   }
 
-  static uint16_t get_pin_value(pin_type pin) {
+  static uint16_t get_pin_value(const pin_type pin) {
     if (!valid_pin(pin)) return 0;
     return pin_map[pin].value;
   }
 
-  static bool valid_pin(pin_type pin) {
+  static inline constexpr bool valid_pin(const pin_type pin) {
     return pin >= 0 && pin <= pin_count;
   }
 
-  static void set(pin_type pin) {
+  static inline void set(const pin_type pin) {
     set(pin, 1);
   }
 
-  static void set(pin_type pin, uint16_t value) {
+  static void set(const pin_type pin, const uint16_t value) {
     if (!valid_pin(pin)) return;
     GpioEvent::Type evt_type = value > 1 ? GpioEvent::SET_VALUE : value > pin_map[pin].value ? GpioEvent::RISE : value < pin_map[pin].value ? GpioEvent::FALL : GpioEvent::NOP;
     pin_map[pin].value = value;
@@ -126,18 +126,18 @@ public:
     for (auto callback : pin_map[pin].callbacks) callback(evt);
   }
 
-  static uint16_t get(pin_type pin) {
+  static uint16_t get(const pin_type pin) {
     if (!valid_pin(pin)) return 0;
     GpioEvent evt(Kernel::TimeControl::getTicks(), pin, GpioEvent::GET_VALUE);
     for (auto callback : pin_map[pin].callbacks) callback(evt);
     return pin_map[pin].value;
   }
 
-  static void clear(pin_type pin) {
+  static inline void clear(const pin_type pin) {
     set(pin, 0);
   }
 
-  static void setMode(pin_type pin, uint8_t value) {
+  static void setMode(const pin_type pin, const uint8_t value) {
     if (!valid_pin(pin)) return;
     pin_map[pin].mode = pin_data::Mode::GPIO;
 
@@ -151,19 +151,19 @@ public:
 
   }
 
-  static uint8_t getMode(pin_type pin) {
+  static inline uint8_t getMode(const pin_type pin) {
     if (!valid_pin(pin)) return 0;
     return pin_map[pin].mode;
   }
 
-  static void setDir(pin_type pin, uint8_t value) {
+  static void setDir(const pin_type pin, const uint8_t value) {
     if (!valid_pin(pin)) return;
     pin_map[pin].dir = value;
     GpioEvent evt(Kernel::TimeControl::getTicks(), pin, GpioEvent::Type::SETD);
     for (auto callback : pin_map[pin].callbacks) callback(evt);
   }
 
-  static uint8_t getDir(pin_type pin) {
+  static inline uint8_t getDir(const pin_type pin) {
     if (!valid_pin(pin)) return 0;
     return pin_map[pin].dir;
   }
