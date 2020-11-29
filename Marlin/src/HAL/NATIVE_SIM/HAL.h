@@ -111,3 +111,72 @@ inline uint8_t HAL_get_reset_source(void) { return RST_POWER_ON; }
 typedef void (*systickCallback_t)(void);
 void systick_attach_callback(systickCallback_t cb);
 extern volatile uint32_t systick_uptime_millis;
+
+// Marlin uses strstr in constexpr context, this is not supported, workaround by defining constexpr versions of the required functions.
+#define strstr(a, b) strstr_constexpr((a), (b))
+
+constexpr inline std::size_t strlen_constexpr(const char* str) {
+  // https://github.com/gcc-mirror/gcc/blob/5c7634a0e5f202935aa6c11b6ea953b8bf80a00a/libstdc%2B%2B-v3/include/bits/char_traits.h#L329
+  if (str != nullptr) {
+    std::size_t i = 0;
+    while (str[i] != '\0') {
+      ++i;
+    }
+
+    return i;
+  }
+
+  return 0;
+}
+
+constexpr inline int strncmp_constexpr(const char* lhs, const char* rhs, std::size_t count) {
+  // https://github.com/gcc-mirror/gcc/blob/13b9cbfc32fe3ac4c81c4dd9c42d141c8fb95db4/libstdc%2B%2B-v3/include/bits/char_traits.h#L655
+  if (lhs == nullptr || rhs == nullptr) {
+    return rhs != nullptr ? -1 : 1;
+  }
+
+  for (std::size_t i = 0; i < count; ++i) {
+    if (lhs[i] != rhs[i]) {
+      return lhs[i] < rhs[i] ? -1 : 1;
+    } else if (lhs[i] == '\0') {
+      return 0;
+    }
+  }
+
+  return 0;
+}
+
+constexpr inline const char* strstr_constexpr(const char* str, const char* target) {
+  // https://github.com/freebsd/freebsd/blob/master/sys/libkern/strstr.c
+  if (char c = target != nullptr ? *target++ : '\0'; c != '\0' && str != nullptr) {
+    std::size_t len = strlen_constexpr(target);
+    do {
+      char sc = {};
+      do {
+        if ((sc = *str++) == '\0') {
+          return nullptr;
+        }
+      } while (sc != c);
+    } while (strncmp_constexpr(str, target, len) != 0);
+    --str;
+  }
+
+  return str;
+}
+
+constexpr inline char* strstr_constexpr(char* str, const char* target) {
+  // https://github.com/freebsd/freebsd/blob/master/sys/libkern/strstr.c
+  if (char c = target != nullptr ? *target++ : '\0'; c != '\0' && str != nullptr) {
+    std::size_t len = strlen_constexpr(target);
+    do {
+      char sc = {};
+      do {
+        if ((sc = *str++) == '\0') {
+          return nullptr;
+        }
+      } while (sc != c);
+    } while (strncmp_constexpr(str, target, len) != 0);
+    --str;
+  }
+  return str;
+}
