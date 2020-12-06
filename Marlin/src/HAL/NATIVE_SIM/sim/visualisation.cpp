@@ -27,8 +27,13 @@ Visualisation::Visualisation() :
   y_axis("Y", Y_AXIS,steps_per_unit[1], Y_BED_SIZE, Y_ENABLE_PIN, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN, INVERT_Y_DIR, std::bind(&Visualisation::on_position_update, this, std::placeholders::_1)),
   z_axis("Z", Z_AXIS, steps_per_unit[2], Z_MAX_POS, Z_ENABLE_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN, INVERT_Z_DIR, std::bind(&Visualisation::on_position_update, this, std::placeholders::_1)),
   extruder0("E", Z_AXIS, steps_per_unit[3], 0, E0_ENABLE_PIN, E0_DIR_PIN, E0_STEP_PIN, P_NC, P_NC, INVERT_E0_DIR, std::bind(&Visualisation::on_position_update, this, std::placeholders::_1)),
-  print_bed({X_BED_SIZE, Y_BED_SIZE}),
-  probe(pin_type(Z_MIN_PROBE_PIN), NOZZLE_TO_PROBE_OFFSET, effector_pos, print_bed)
+  print_bed({X_BED_SIZE, Y_BED_SIZE})
+  #if HAS_BED_PROBE
+  , probe(pin_type(Z_MIN_PROBE_PIN), NOZZLE_TO_PROBE_OFFSET, effector_pos, print_bed)
+  #endif
+  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+  , runout_sensor(FIL_RUNOUT1_PIN, FIL_RUNOUT_STATE)
+  #endif
 {
   on_position_update(x_axis); //to get first position
 }
