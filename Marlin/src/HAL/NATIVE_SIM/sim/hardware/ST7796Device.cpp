@@ -42,11 +42,15 @@ void ST7796Device::process_command(Command cmd) {
   if (cmd.cmd == ST7796S_CASET) {
     xMin = (cmd.data[0] << 8) + cmd.data[1];
     xMax = (cmd.data[2] << 8) + cmd.data[3];
+    if (xMin >= width) xMin = width - 1;
+    if (xMax >= width) xMax = width - 1;
     graphic_ram_index_x = xMin;
   }
   else if (cmd.cmd == ST7796S_RASET) {
     yMin = (cmd.data[0] << 8) + cmd.data[1];
     yMax = (cmd.data[2] << 8) + cmd.data[3];
+    if (yMin >= height) yMin = height - 1;
+    if (yMax >= height) yMax = height - 1;
     graphic_ram_index_y = yMin;
   }
   // else if (cmd.cmd == ST7796S_RAMWR) {
@@ -74,7 +78,7 @@ void ST7796Device::update() {
   if (dirty && delta > 1.0 / 30.0) {
     last_update = now;
     glBindTexture(GL_TEXTURE_2D, texture_id);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 480, 320, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, graphic_ram);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, graphic_ram);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 }
@@ -108,7 +112,7 @@ void ST7796Device::onByteReceived(uint8_t _byte) {
     //direct write to memory, to optimize
     if (command == ST7796S_RAMWR && data.size() == 2) {
       auto pixel = (data[0] << 8) + data[1];
-      graphic_ram[graphic_ram_index_x + (graphic_ram_index_y * 480)] = pixel;
+      graphic_ram[graphic_ram_index_x + (graphic_ram_index_y * width)] = pixel;
       if (graphic_ram_index_x >= xMax) {
         graphic_ram_index_x = xMin;
         graphic_ram_index_y++;
@@ -119,6 +123,7 @@ void ST7796Device::onByteReceived(uint8_t _byte) {
       if (graphic_ram_index_y >= yMax && graphic_ram_index_x >= xMax) {
         dirty = true;
       }
+      if (graphic_ram_index_y >= height) graphic_ram_index_y = yMin;
       data.clear();
     }
   }

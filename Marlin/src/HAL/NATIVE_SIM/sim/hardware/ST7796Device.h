@@ -10,6 +10,13 @@
 #include "SPISlavePeripheral.h"
 #include "XPT2046Device.h"
 
+#ifndef TFT_WIDTH
+  #define TFT_WIDTH 480
+#endif
+#ifndef TFT_HEIGHT
+  #define TFT_HEIGHT 320
+#endif
+
 class ST7796Device: public SPISlavePeripheral {
 public:
   //TODO: support encoder in the TFT
@@ -33,7 +40,7 @@ public:
   void onByteReceived(uint8_t _byte) override;
   void onEndTransaction() override;
 
-  static constexpr uint32_t width = 480, height = 320;
+  static constexpr uint32_t width = TFT_WIDTH, height = TFT_HEIGHT;
 
   pin_type dc_pin, beeper_pin, enc1_pin, enc2_pin, enc_but_pin, back_pin, kill_pin;
 

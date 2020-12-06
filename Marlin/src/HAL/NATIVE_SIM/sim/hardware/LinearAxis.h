@@ -23,24 +23,43 @@
 
 #include <chrono>
 #include "Gpio.h"
+#include "../user_interface.h"
+#include "src/core/types.h"
 
 class LinearAxis: public Peripheral {
 public:
-  LinearAxis(pin_type enable, pin_type dir, pin_type step, pin_type end_min, pin_type end_max, bool invert_travel = false);
+  LinearAxis(const char* name, AxisEnum my_axis, uint32_t steps_per_unit, float max_position_logical, pin_type enable, pin_type dir, pin_type step, pin_type end_min, pin_type end_max, bool invert_travel = false, std::function<void(LinearAxis&)> update_position_callback =  [](LinearAxis&){});
   virtual ~LinearAxis();
   void update();
   void interrupt(GpioEvent& ev);
 
+  float position_logical = 0;
+
+  void ui_info_callback(UiWindow*) {
+    ImGui::PushItemWidth(100);
+    if (ImGui::InputFloat(min_pos_label.c_str(), &min_position_logical, 0.01f, 0.1f)) {
+      min_position = min_position_logical * steps_per_unit;
+    }
+    ImGui::PopItemWidth();
+  };
+
+private:
+  const char* name;
+  AxisEnum my_axis;
+  uint32_t steps_per_unit;
+  int32_t max_position;
   pin_type enable_pin;
   pin_type dir_pin;
   pin_type step_pin;
   pin_type min_pin;
   pin_type max_pin;
-
-  std::atomic_int32_t position;
-  int32_t min_position;
-  int32_t max_position;
+  std::atomic_int32_t min_position;
   uint64_t last_update;
   int8_t invert_travel;
-
+  std::atomic_int32_t position = 0;
+  std::function<void(LinearAxis&)> update_position_callback;
+  float min_position_logical = 0;
+  float max_position_logical = 0;
+  std::string min_pos_label;
+  std::string max_pos_label;
 };

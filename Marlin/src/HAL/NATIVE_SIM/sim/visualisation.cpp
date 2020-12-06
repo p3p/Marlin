@@ -17,16 +17,16 @@
 
 #include "hardware/LinearAxis.h"
 #include "src/inc/MarlinConfig.h"
-
+#include "src/module/motion.h"
 
 
 constexpr uint32_t steps_per_unit[] = DEFAULT_AXIS_STEPS_PER_UNIT;
 
 Visualisation::Visualisation() :
-  x_axis(X_ENABLE_PIN, X_DIR_PIN, X_STEP_PIN, X_MIN_PIN, X_MAX_PIN, INVERT_X_DIR),
-  y_axis(Y_ENABLE_PIN, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN, INVERT_Y_DIR),
-  z_axis(Z_ENABLE_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN, INVERT_Z_DIR),
-  extruder0(E0_ENABLE_PIN, E0_DIR_PIN, E0_STEP_PIN, P_NC, P_NC, INVERT_E0_DIR),
+  x_axis("X", X_AXIS, steps_per_unit[0], X_BED_SIZE, X_ENABLE_PIN, X_DIR_PIN, X_STEP_PIN, X_MIN_PIN, X_MAX_PIN, INVERT_X_DIR, std::bind(&Visualisation::on_position_update, this, std::placeholders::_1)),
+  y_axis("Y", Y_AXIS,steps_per_unit[1], Y_BED_SIZE, Y_ENABLE_PIN, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN, INVERT_Y_DIR, std::bind(&Visualisation::on_position_update, this, std::placeholders::_1)),
+  z_axis("Z", Z_AXIS, steps_per_unit[2], Z_MAX_POS, Z_ENABLE_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN, INVERT_Z_DIR, std::bind(&Visualisation::on_position_update, this, std::placeholders::_1)),
+  extruder0("E", Z_AXIS, steps_per_unit[3], 0, E0_ENABLE_PIN, E0_DIR_PIN, E0_STEP_PIN, P_NC, P_NC, INVERT_E0_DIR, std::bind(&Visualisation::on_position_update, this, std::placeholders::_1)),
   print_bed({X_BED_SIZE, Y_BED_SIZE})
   #if HAS_BED_PROBE
   , probe(pin_type(Z_MIN_PROBE_PIN), NOZZLE_TO_PROBE_OFFSET, effector_pos, print_bed)
@@ -35,18 +35,7 @@ Visualisation::Visualisation() :
   , runout_sensor(FIL_RUNOUT1_PIN, FIL_RUNOUT_STATE)
   #endif
 {
-  Gpio::attach(x_axis.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-  Gpio::attach(x_axis.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-  Gpio::attach(x_axis.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-  Gpio::attach(y_axis.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-  Gpio::attach(y_axis.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-  Gpio::attach(y_axis.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-  Gpio::attach(z_axis.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-  Gpio::attach(z_axis.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-  Gpio::attach(z_axis.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-  Gpio::attach(extruder0.step_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-  Gpio::attach(extruder0.min_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
-  Gpio::attach(extruder0.max_pin, [this](GpioEvent &event){ this->gpio_event_handler(event); });
+  on_position_update(x_axis); //to get first position
 }
 
 Visualisation::~Visualisation() {
@@ -288,11 +277,10 @@ void Visualisation::process_event(SDL_Event& e) {
 }
 
 void Visualisation::gpio_event_handler(GpioEvent& event) {
-  x_axis.interrupt(event);
-  y_axis.interrupt(event);
-  z_axis.interrupt(event);
-  extruder0.interrupt(event);
-  set_head_position(glm::vec4{x_axis.position / (float)steps_per_unit[0], z_axis.position / (float)steps_per_unit[2], y_axis.position / (float)steps_per_unit[1] * -1.0f, extruder0.position  / (float)steps_per_unit[3]});
+}
+
+void Visualisation::on_position_update(LinearAxis&) {
+  set_head_position(glm::vec4{x_axis.position_logical, z_axis.position_logical, y_axis.position_logical * -1.0f, extruder0.position_logical});
 }
 
 using millisec = std::chrono::duration<float, std::milli>;
@@ -574,6 +562,17 @@ void Visualisation::ui_info_callback(UiWindow* w) {
   uint64_t seconds = remainder / (Kernel::TimeControl::ONE_BILLION);
   remainder = remainder % (Kernel::TimeControl::ONE_BILLION);
   ImGui::Text("%02ld:%02ld:%02ld.%09ld", hours, mins, seconds, remainder); //TODO: work around cross platform format string differences
+  ImGui::Text("Marlin/Sim: X: %0.3f / %0.3f = %0.3f, Y: %0.3f / %0.3f = %0.3f, Z: %0.3f / %0.3f = %0.3f",
+              NATIVE_TO_LOGICAL(current_position[X_AXIS], X_AXIS),
+              effector_pos.x,
+              NATIVE_TO_LOGICAL(current_position[X_AXIS], X_AXIS) - effector_pos.x,
+              NATIVE_TO_LOGICAL(current_position[Y_AXIS], Y_AXIS),
+              effector_pos.z * -1.0f,
+              NATIVE_TO_LOGICAL(current_position[Y_AXIS], Y_AXIS) - (effector_pos.z * -1.0f),
+              NATIVE_TO_LOGICAL(current_position[Z_AXIS], Z_AXIS),
+              effector_pos.y,
+              NATIVE_TO_LOGICAL(current_position[Z_AXIS], Z_AXIS) - effector_pos.y);
+  z_axis.ui_info_callback(w);
   ImGui::Text("ISR timing error: %ldns", Kernel::isr_timing_error.load());
 
   // // lock the toggle button until the mode has been changed as it may be blocked
@@ -619,9 +618,6 @@ void Visualisation::ui_info_callback(UiWindow* w) {
   ImGui::SliderFloat("bed level(front right)", &bed_level_point[2].z, -5.0f, 5.0f);
   print_bed.build_3point(bed_level_point[0], bed_level_point[1], bed_level_point[2]);
   ImGui::Separator();
-  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-    runout_sensor.ui_info_callback(w);
-  #endif
 }
 
 #endif

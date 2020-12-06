@@ -436,6 +436,8 @@
     #define XPT2046_Y_OFFSET             -20
   #endif
 
+  #define BTN_BACK                        70
+
 #elif HAS_WIRED_LCD
 
   //

@@ -6,7 +6,6 @@
 #include "hardware/LinearAxis.h"
 #include "hardware/print_bed.h"
 #include "hardware/bed_probe.h"
-#include "hardware/FilamentRunoutSensor.h"
 
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
@@ -184,6 +183,7 @@ public:
   void gpio_event_handler(GpioEvent& event);
   void update();
   void destroy();
+  void on_position_update(LinearAxis&);
 
   void ui_viewport_callback(UiWindow*);
   void ui_info_callback(UiWindow*);

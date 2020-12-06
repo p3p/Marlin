@@ -56,6 +56,9 @@ struct GraphWindow : public UiWindow {
 #if HAS_SPI_FLASH
   #include "hardware/W25QxxDevice.h"
 #endif
+#if ENABLED(FILAMENT_RUNOUT_SENSOR)
+  #include "hardware/FilamentRunoutSensor.h"
+#endif
 
 class Simulation {
 public:
@@ -67,6 +70,9 @@ public:
                   #endif
                   #ifdef SDSUPPORT
                   , sd(SCK_PIN, MISO_PIN, MOSI_PIN, SDSS, SD_DETECT_PIN, SD_DETECT_STATE)
+                  #endif
+                  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+                  , runout_sensor(FIL_RUNOUT1_PIN, FIL_RUNOUT_STATE)
                   #endif
                   , display(DISPLAY_PARAM) {}
 
@@ -87,6 +93,9 @@ public:
     #ifdef SDSUPPORT
       sd.ui_info_callback(w);
     #endif
+    #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+      runout_sensor.ui_info_callback(w);
+    #endif
   }
 
   Heater hotend;
@@ -96,6 +105,9 @@ public:
   #endif
   #ifdef SDSUPPORT
     SDCard sd;
+  #endif
+  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+    FilamentRunoutSensor runout_sensor;
   #endif
   DisplayDevice display;
   Visualisation vis;
