@@ -172,7 +172,9 @@ public:
   LinearAxis extruder0;
   PrintBed print_bed;
   glm::vec3 bed_level_point[3] = {{build_plate_dimension.x / 2, build_plate_dimension.y,0},{0,0,0},{build_plate_dimension.x,0,0}};
-  BedProbe probe;
+  #if HAS_BED_PROBE
+    BedProbe probe;
+  #endif
   #if ENABLED(FILAMENT_RUNOUT_SENSOR)
     FilamentRunoutSensor runout_sensor;
   #endif
