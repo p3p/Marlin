@@ -16,11 +16,13 @@ public:
   }
 
   void ui_info_callback(UiWindow*) {
-    ImGui::Checkbox("Filament Present ", (bool*)&filament_present);
+    bool value_check = filament_present.load();
+    ImGui::Checkbox("Filament Present ", &value_check);
+    filament_present.store(value_check);
   }
 
 private:
   pin_type runout_pin;
   bool runtout_trigger_value;
-  bool filament_present = true;
+  std::atomic_bool filament_present = true;
 };

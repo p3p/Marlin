@@ -31,9 +31,6 @@ Visualisation::Visualisation() :
   #if HAS_BED_PROBE
   , probe(pin_type(Z_MIN_PROBE_PIN), NOZZLE_TO_PROBE_OFFSET, effector_pos, print_bed)
   #endif
-  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-  , runout_sensor(FIL_RUNOUT1_PIN, FIL_RUNOUT_STATE)
-  #endif
 {
   on_position_update(x_axis); //to get first position
 }

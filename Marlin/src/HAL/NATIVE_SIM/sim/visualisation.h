@@ -174,9 +174,6 @@ public:
   #if HAS_BED_PROBE
     BedProbe probe;
   #endif
-  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-    FilamentRunoutSensor runout_sensor;
-  #endif
 
   float ui_realtime_scale = 0.0f;
 
