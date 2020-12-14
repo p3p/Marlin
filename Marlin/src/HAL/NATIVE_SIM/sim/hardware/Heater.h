@@ -25,6 +25,8 @@
 
 #include "Gpio.h"
 
+#include "../virtual_printer.h"
+
 /**
  * data structures for future generalisation
  **/
@@ -46,12 +48,13 @@ struct adc_data {
   uint32_t resolution;
 };
 
-class Heater: public Peripheral {
+class Heater: public VirtualPrinter::Component {
 public:
   Heater(pin_type heater_pin, pin_type adc_pin, heater_data heater, hotend_data hotend, adc_data adc);
   virtual ~Heater();
   void interrupt(GpioEvent& ev);
   void update();
+  void ui_widget();
 
   pin_type heater_pin, adc_pin;
 

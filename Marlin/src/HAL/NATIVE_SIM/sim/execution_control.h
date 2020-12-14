@@ -82,6 +82,7 @@ public:
       if (getRealtimeTicks() > getTicks() || realtime_scale > 99.0f) {
         realtime_nanos = nanos();
       } else while (getTicks() > getRealtimeTicks()) {
+        if (quit_requested) throw (std::runtime_error("Quit Requested"));  // quit program when stuck at 0 speed
         updateRealtime();
         std::this_thread::yield();
       }
@@ -101,10 +102,7 @@ public:
       ticks.store(ticks.load() + delta_ticks);
     }
 
-    inline static uint64_t nanos() {
-      addTicks(1 + nanosToTicks(100)); // Marlin has loops that only break after x ticks, so we need to increment ticks here
-      return ticksToNanos(getTicks());
-    }
+    static uint64_t nanos();
 
     inline static uint64_t micros() {
       return nanos() / ONE_THOUSAND;

@@ -55,12 +55,6 @@ public:
   virtual void log(GpioEvent ev) = 0;
 };
 
-class Peripheral {
-public:
-  virtual ~Peripheral(){};
-  virtual void update() = 0;
-};
-
 struct pin_data {
   enum Mode {
     GPIO,

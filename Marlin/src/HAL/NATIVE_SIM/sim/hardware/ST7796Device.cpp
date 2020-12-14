@@ -8,6 +8,9 @@
 
 #include <gl.h>
 
+#include "imgui.h"
+#include "imgui_internal.h"
+
 #include "ST7796Device.h"
 
 #include "../../tft/xpt2046.h"
@@ -26,14 +29,6 @@ ST7796Device::ST7796Device(pin_type clk, pin_type miso, pin_type mosi, pin_type 
   Gpio::attach(back_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(enc1_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(enc2_pin, [this](GpioEvent& event){ this->interrupt(event); });
-
-  glGenTextures(1, &texture_id);
-  glBindTexture(GL_TEXTURE_2D, texture_id);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 ST7796Device::~ST7796Device() {}
@@ -133,10 +128,28 @@ void ST7796Device::onByteReceived(uint8_t _byte) {
   }
 }
 
-void ST7796Device::ui_callback(UiWindow* window) {
-  if (ImGui::IsWindowFocused()) {
-    touch.ui_callback(window);
-  }
+void ST7796Device::ui_init() {
+  glGenTextures(1, &texture_id);
+  glBindTexture(GL_TEXTURE_2D, texture_id);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void ST7796Device::ui_widget() {
+  auto size = ImGui::GetContentRegionAvail();
+  size.y = size.x / (width / (float)height);
+  ImGui::BeginChild("ST7796Device", size);
+  ImGui::GetCurrentWindow()->ScrollMax.y = 1.0f; // disable window scroll
+
+  ImGui::Image((ImTextureID)(intptr_t)texture_id, size, ImVec2(0,0), ImVec2(1,1));
+  //if (ImGui::IsItemFocused()) {
+    touch.ui_callback();
+  //}
+
+  ImGui::EndChild();
 }
 
 #endif

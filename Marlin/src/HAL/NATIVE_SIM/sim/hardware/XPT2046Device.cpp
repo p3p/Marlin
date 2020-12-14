@@ -52,14 +52,17 @@ void XPT2046Device::onEndTransaction() {
   }
 };
 
-
-void XPT2046Device::ui_callback(UiWindow* window) {
-  if (ImGui::IsWindowFocused() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-    lastClickX = ImGui::GetIO().MousePos.x;
-    lastClickY = ImGui::GetIO().MousePos.y;
+void XPT2046Device::ui_callback() {
+  if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
     dirty = true;
     touch_time = Kernel::SimulationRuntime::millis();
-    // printf("click x: %d, y: %d\n", lastClickX, lastClickY);
+    auto display_min = glm::vec2(ImGui::GetItemRectMin().x, ImGui::GetItemRectMin().y);
+    auto display_max = glm::vec2(ImGui::GetItemRectMax().x, ImGui::GetItemRectMax().y) - display_min;
+    auto click_pixel = glm::vec2(ImGui::GetMousePos().x, ImGui::GetMousePos().y) - display_min;
+    auto click_ratio = (click_pixel / display_max);
+    lastClickX = 1024 * click_ratio.x;
+    lastClickY = 1024 * click_ratio.y;
+    //printf("click x: %d, y: %d\n",  lastClickX, lastClickY);
   }
 }
 

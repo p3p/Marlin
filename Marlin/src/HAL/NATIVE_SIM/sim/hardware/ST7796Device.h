@@ -35,7 +35,9 @@ public:
   void process_command(Command cmd);
   void update();
   void interrupt(GpioEvent& ev);
-  void ui_callback(UiWindow* window);
+
+  void ui_init();
+  void ui_widget();
 
   void onByteReceived(uint8_t _byte) override;
   void onEndTransaction() override;

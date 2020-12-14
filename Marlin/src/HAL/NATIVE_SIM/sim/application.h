@@ -15,6 +15,8 @@
 #include <implot.h>
 #include "user_interface.h"
 
+#include "virtual_printer.h"
+
 struct GraphWindow : public UiWindow {
   bool hovered = false;
   bool focused = false;
@@ -36,52 +38,17 @@ struct GraphWindow : public UiWindow {
   }
 };
 
-#include "src/inc/MarlinConfig.h"
-#if ANY(TFT_COLOR_UI, TFT_CLASSIC_UI, TFT_LVGL_UI)
-  #include "hardware/ST7796Device.h"
-  using DisplayDevice = ST7796Device;
-  #define DISPLAY_PARAM SCK_PIN, MISO_PIN, MOSI_PIN, TFT_CS_PIN, TOUCH_CS_PIN, TFT_DC_PIN, BEEPER_PIN, BTN_EN1, BTN_EN2, BTN_ENC, BTN_BACK, KILL_PIN
-#elif defined(HAS_MARLINUI_HD44780)
-  #include "hardware/HD44780Device.h"
-  using DisplayDevice = HD44780Device;
-  #define DISPLAY_PARAM LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7, BEEPER_PIN, BTN_EN1, BTN_EN2, BTN_ENC, BTN_BACK, KILL_PIN
-#else
-  #include "hardware/ST7920Device.h"
-  using DisplayDevice = ST7920Device;
-  #define DISPLAY_PARAM LCD_PINS_D4, LCD_PINS_ENABLE, LCD_PINS_RS, BEEPER_PIN, BTN_EN1, BTN_EN2, BTN_ENC, BTN_BACK, KILL_PIN
-#endif
-#ifdef SDSUPPORT
-  #include "hardware/SDCard.h"
-#endif
-#if HAS_SPI_FLASH
-  #include "hardware/W25QxxDevice.h"
-#endif
-#if ENABLED(FILAMENT_RUNOUT_SENSOR)
-  #include "hardware/FilamentRunoutSensor.h"
-#endif
-
 class Simulation {
 public:
 
-  Simulation() :  hotend(HEATER_0_PIN, TEMP_0_PIN, {12, 3.6}, {13, 20, 0.897}, {4700, 12}),
-                  bed_heater(HEATER_BED_PIN, TEMP_BED_PIN, {12, 1.2}, {325, 824, 0.897}, {4700, 12})
-                  #if HAS_SPI_FLASH
-                  , spi_flash(SCK_PIN, MISO_PIN, MOSI_PIN, W25QXX_CS_PIN, SPI_FLASH_SIZE)
-                  #endif
-                  #ifdef SDSUPPORT
-                  , sd(SCK_PIN, MISO_PIN, MOSI_PIN, SDSS, SD_DETECT_PIN, SD_DETECT_STATE)
-                  #endif
-                  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-                  , runout_sensor(FIL_RUNOUT1_PIN, FIL_RUNOUT_STATE)
-                  #endif
-                  , display(DISPLAY_PARAM) {}
+  Simulation() : vis(testPrinter) {
+    testPrinter.build();
+  }
 
   void process_event(SDL_Event& e) {}
 
   void update() {
-    hotend.update();
-    bed_heater.update();
-    display.update();
+    testPrinter.update();
   }
 
   void ui_callback(UiWindow*) {
@@ -90,26 +57,9 @@ public:
 
   void ui_info_callback(UiWindow *w) {
     vis.ui_info_callback(w);
-    #ifdef SDSUPPORT
-      sd.ui_info_callback(w);
-    #endif
-    #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-      runout_sensor.ui_info_callback(w);
-    #endif
   }
 
-  Heater hotend;
-  Heater bed_heater;
-  #if HAS_SPI_FLASH
-    W25QxxDevice spi_flash;
-  #endif
-  #ifdef SDSUPPORT
-    SDCard sd;
-  #endif
-  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-    FilamentRunoutSensor runout_sensor;
-  #endif
-  DisplayDevice display;
+  VirtualPrinter testPrinter;
   Visualisation vis;
 };
 

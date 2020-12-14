@@ -7,9 +7,11 @@
 
 #include <list>
 #include <deque>
+
+#include "../virtual_printer.h"
 #include "Gpio.h"
 
-class ST7920Device: public Peripheral {
+class ST7920Device: public VirtualPrinter::Component {
 public:
   enum KeyName {
     KILL_BUTTON, ENCODER_BUTTON, BACK_BUTTON, COUNT
@@ -27,7 +29,8 @@ public:
   void process_command(Command cmd);
   void update();
   void interrupt(GpioEvent& ev);
-  void ui_callback(UiWindow* window);
+  void ui_init() override;
+  void ui_widget() override;
 
   static constexpr uint32_t width = 128, height = 64;
 

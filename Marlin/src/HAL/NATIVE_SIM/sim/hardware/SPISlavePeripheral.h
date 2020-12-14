@@ -1,11 +1,12 @@
 #pragma once
 
+#include "../virtual_printer.h"
 #include "Gpio.h"
 
 /**
  * Class to Easily Handle SPI Slave communication
  */
-class SPISlavePeripheral : Peripheral {
+class SPISlavePeripheral : public VirtualPrinter::Component {
 public:
   SPISlavePeripheral(pin_type clk, pin_type miso, pin_type mosi, pin_type cs, uint8_t CPOL = 0, uint8_t CPHA = 0);
   virtual ~SPISlavePeripheral();

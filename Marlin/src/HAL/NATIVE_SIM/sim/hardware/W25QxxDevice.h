@@ -17,6 +17,7 @@ public:
   W25QxxDevice(pin_type clk, pin_type mosi, pin_type miso, pin_type cs, size_t flash_size) : SPISlavePeripheral(clk, mosi, miso, cs), flash_size(flash_size) {
     // read current data
     fp = fopen(SPI_FLASH_IMAGE, "rb+");
+    assert(fp);
     data = new uint8_t[flash_size];
     memset(data, 0xFF, flash_size);
     fread(data, 1, flash_size, fp);
@@ -26,9 +27,6 @@ public:
   };
 
   size_t flash_size;
-
-  void update() {};
-  void ui_callback(UiWindow* window) {};
 
   void onByteReceived(uint8_t _byte) override;
   void onEndTransaction() override;

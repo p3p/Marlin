@@ -8,6 +8,9 @@
 
 #include <gl.h>
 
+#include "imgui.h"
+#include "imgui_internal.h"
+
 #include "ST7920Device.h"
 
 ST7920Device::ST7920Device(pin_type clk, pin_type mosi, pin_type cs, pin_type beeper, pin_type enc1, pin_type enc2, pin_type enc_but, pin_type back, pin_type kill)
@@ -21,14 +24,6 @@ ST7920Device::ST7920Device(pin_type clk, pin_type mosi, pin_type cs, pin_type be
   Gpio::attach(enc_but_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(back_pin, [this](GpioEvent& event){ this->interrupt(event); });
   Gpio::attach(kill_pin, [this](GpioEvent& event){ this->interrupt(event); });
-
-  glGenTextures(1, &texture_id);
-  glBindTexture(GL_TEXTURE_2D, texture_id);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 ST7920Device::~ST7920Device() {}
@@ -147,12 +142,29 @@ void ST7920Device::interrupt(GpioEvent& ev) {
   }
 }
 
-void ST7920Device::ui_callback(UiWindow* window) {
+void ST7920Device::ui_init() {
+  glGenTextures(1, &texture_id);
+  glBindTexture(GL_TEXTURE_2D, texture_id);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void ST7920Device::ui_widget() {
   static long int call_count = 0;
   static uint8_t up_held = 0, down_held = 0;
   call_count++;
-  if (ImGui::IsWindowFocused()) {
 
+  auto size = ImGui::GetContentRegionAvail();
+  size.y = size.x / (width / (float)height);
+  ImGui::BeginChild("ST7920Device", size);
+  ImGui::GetCurrentWindow()->ScrollMax.y = 1.0f; // disable window scroll
+
+  ImGui::Image((ImTextureID)(intptr_t)texture_id, size, ImVec2(0,0), ImVec2(1,1));
+
+  if (ImGui::IsWindowFocused()) {
     key_pressed[KeyName::KILL_BUTTON]    = ImGui::IsKeyDown(SDL_SCANCODE_K);
     key_pressed[KeyName::ENCODER_BUTTON] = ImGui::IsKeyDown(SDL_SCANCODE_SPACE) || ImGui::IsKeyDown(SDL_SCANCODE_RETURN) || ImGui::IsKeyDown(SDL_SCANCODE_RIGHT);
     key_pressed[KeyName::BACK_BUTTON]    = ImGui::IsKeyDown(SDL_SCANCODE_LEFT);
@@ -163,11 +175,12 @@ void ST7920Device::ui_callback(UiWindow* window) {
     if (down_held) { down_held--; encoder_position++; }
     else if (ImGui::IsKeyPressed(SDL_SCANCODE_DOWN)) down_held = 4;
 
-    if (ImGui::IsWindowHovered()) {
+    if (ImGui::IsItemHovered()) {
       key_pressed[KeyName::ENCODER_BUTTON] |= ImGui::IsMouseClicked(0);
       encoder_position += ImGui::GetIO().MouseWheel > 0 ? 1 : ImGui::GetIO().MouseWheel < 0 ? -1 : 0;
     }
   }
+  ImGui::EndChild();
 }
 
 #endif

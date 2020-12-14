@@ -7,9 +7,11 @@
 
 #include <list>
 #include <deque>
+
+#include "../virtual_printer.h"
 #include "Gpio.h"
 
-class HD44780Device: public Peripheral {
+class HD44780Device: public VirtualPrinter::Component {
 public:
   enum KeyName {
     KILL_BUTTON, ENCODER_BUTTON, BACK_BUTTON, COUNT
@@ -20,7 +22,8 @@ public:
   void process_command(uint8_t cmd);
   void update();
   void interrupt(GpioEvent& ev);
-  void ui_callback(UiWindow* window);
+  void ui_init();
+  void ui_widget();
 
   struct {
     void update_address_counter(int8_t direction = 0) {

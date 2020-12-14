@@ -21,7 +21,9 @@
  */
 #ifdef __PLAT_NATIVE_SIM__
 
-#include <Arduino.h>
+#include <imgui.h>
+
+#include "pinmapping.h"
 #include "Heater.h"
 
 constexpr double absolute_zero_offset = -273.15;
@@ -46,7 +48,7 @@ double temperature_to_resistance(double t) {
 	return r;
 }
 
-Heater::Heater(pin_t heater_pin, pin_t adc_pin, heater_data heater, hotend_data hotend, adc_data adc) : heater_pin(heater_pin), adc_pin(analogInputToDigitalPin(adc_pin)) {
+Heater::Heater(pin_type heater_pin, pin_type adc_pin, heater_data heater, hotend_data hotend, adc_data adc) : VirtualPrinter::Component("Heater"), heater_pin(heater_pin), adc_pin(analogInputToDigitalPin(adc_pin)) {
   heater_resistance = heater.resistance;
   heater_volts = heater.voltage;
 
@@ -68,6 +70,10 @@ Heater::~Heater() {
 
 void Heater::update() {
 
+}
+
+void Heater::ui_widget() {
+  ImGui::Text("Temperature: %f", hotend_temperature);
 }
 
 // models energy transfer but not time lag as it tranfers through the medium.

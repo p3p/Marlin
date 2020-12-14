@@ -23,16 +23,17 @@
 class SDCard: public SPISlavePeripheral {
 public:
   SDCard(pin_type clk, pin_type mosi, pin_type miso, pin_type cs, pin_type sd_detect = -1, bool sd_detect_state = true) : SPISlavePeripheral(clk, mosi, miso, cs), sd_detect(sd_detect), sd_detect_state(sd_detect_state) {
-    if (sd_detect > -1) {
+    if (Gpio::valid_pin(sd_detect)) {
       Gpio::attach(sd_detect, [this](GpioEvent& event){ this->interrupt(event); });
     }
   }
   virtual ~SDCard() {};
 
   void update() {}
-  void ui_callback(UiWindow* window);
-  void ui_info_callback(UiWindow*) {
-    if (sd_detect > -1) {
+
+  void ui_widget() {
+    ImGui::Text("FileSystem image \"%s\" selected", SD_SIMULATOR_FAT_IMAGE);
+    if (Gpio::valid_pin(sd_detect)) {
       ImGui::Checkbox("SD Card Present ", (bool*)&sd_present);
     }
   }

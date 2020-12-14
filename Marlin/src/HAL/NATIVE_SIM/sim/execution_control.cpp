@@ -32,14 +32,14 @@ bool Kernel::is_initialized(bool known_state) {
 }
 
 bool Kernel::execute_loop( uint64_t max_end_ticks) {
-  if (debug_break_flag) { debug_break(); debug_break_flag = false; }
+  // Marlin often gets into reentrant loops, this is the only way to unroll out of that call stack early
+  if (quit_requested) throw (std::runtime_error("Quit Requested"));
+  if (debug_break_flag) { debug_break_flag = false; debug_break(); }
+
   //simulation time lock
   TimeControl::realtime_sync();
 
   //todo: investigate dataloss when pulling from SerialMonitor rather than pushing from here
-
-  // Marlin often gets into reentrant loops, this is the only way to unroll out of that call stack early
-  if (quit_requested) throw (std::runtime_error("Quit Requested"));
 
   if (usb_serial.transmit_buffer.available()) {
     char buffer[usb_serial.transmit_buffer_size];
@@ -81,6 +81,13 @@ bool Kernel::execute_loop( uint64_t max_end_ticks) {
   }
 
   return false;
+}
+
+uint64_t Kernel::TimeControl::nanos() {
+  if (debug_break_flag) { debug_break_flag = false; debug_break();}  // break into debugger when stuck in time dependent loops
+  if (quit_requested) throw (std::runtime_error("Quit Requested"));  // quit program when stuck in time dependent loops
+  addTicks(1 + nanosToTicks(100)); // Marlin has loops that only break after x ticks, so we need to increment ticks here
+  return ticksToNanos(getTicks());
 }
 
 // if a thread wants to wait, see what should be executed during that wait

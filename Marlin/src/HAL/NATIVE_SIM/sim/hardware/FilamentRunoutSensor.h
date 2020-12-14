@@ -2,10 +2,11 @@
 
 #include "Gpio.h"
 #include "../user_interface.h"
+#include "../virtual_printer.h"
 
-class FilamentRunoutSensor {
+class FilamentRunoutSensor : public VirtualPrinter::Component {
 public:
-  FilamentRunoutSensor(pin_type runout_pin, bool runtout_trigger_value) : runout_pin(runout_pin), runtout_trigger_value(runtout_trigger_value) {
+  FilamentRunoutSensor(pin_type runout_pin, bool runtout_trigger_value) : VirtualPrinter::Component("FilamentRunoutSensor"), runout_pin(runout_pin), runtout_trigger_value(runtout_trigger_value) {
     Gpio::attach(runout_pin, [this](GpioEvent& event){ this->interrupt(event); });
   }
 
@@ -15,7 +16,7 @@ public:
     }
   }
 
-  void ui_info_callback(UiWindow*) {
+  void ui_widget() {
     bool value_check = filament_present.load();
     ImGui::Checkbox("Filament Present ", &value_check);
     filament_present.store(value_check);

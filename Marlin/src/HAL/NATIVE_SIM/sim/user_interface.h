@@ -24,7 +24,8 @@
  */
 
 static constexpr const char* ImGuiDefaultLayout =
-R"([Window][DockSpaceWindwow]
+R"(
+[Window][DockSpaceWindwow]
 Pos=0,0
 Size=1280,720
 Collapsed=0
@@ -34,37 +35,46 @@ Pos=60,60
 Size=400,400
 Collapsed=0
 
-[Window][Controller Display]
+[Window][Components]
+Pos=1039,0
+Size=241,720
+Collapsed=0
+DockId=0x00000006,0
+
+[Window][Serial Monitor]
+Pos=296,509
+Size=741,211
+Collapsed=0
+DockId=0x00000008,0
+
+[Window][Simulation]
 Pos=0,0
-Size=498,274
+Size=294,159
 Collapsed=0
 DockId=0x00000003,0
 
 [Window][Viewport]
-Pos=500,0
-Size=780,720
+Pos=296,0
+Size=741,507
 Collapsed=0
-DockId=0x00000002,0
+DockId=0x00000007,0
 
-[Window][Serial Monitor]
-Pos=0,276
-Size=498,444
+[Window][Status]
+Pos=0,161
+Size=294,559
 Collapsed=0
 DockId=0x00000004,0
 
-[Window][Status]
-Pos=0,0
-Size=498,274
-Collapsed=0
-DockId=0x00000003,1
-
 [Docking][Data]
-DockSpace     ID=0x6F13380E Window=0x49B6D357 Pos=0,0 Size=1280,720 Split=X
-  DockNode    ID=0x00000001 Parent=0x6F13380E SizeRef=498,720 Split=Y Selected=0xB42549D5
-    DockNode  ID=0x00000003 Parent=0x00000001 SizeRef=263,274 Selected=0x0C6D4DF2
-    DockNode  ID=0x00000004 Parent=0x00000001 SizeRef=263,444 Selected=0xB42549D5
-  DockNode    ID=0x00000002 Parent=0x6F13380E SizeRef=780,720 CentralNode=1 Selected=0x995B0CF8
-
+DockSpace       ID=0x6F13380E Window=0x49B6D357 Pos=0,0 Size=1280,720 Split=X
+  DockNode      ID=0x00000005 Parent=0x6F13380E SizeRef=1037,720 Split=X
+    DockNode    ID=0x00000001 Parent=0x00000005 SizeRef=294,720 Split=Y Selected=0x7CAC602A
+      DockNode  ID=0x00000003 Parent=0x00000001 SizeRef=637,159 Selected=0x848745AB
+      DockNode  ID=0x00000004 Parent=0x00000001 SizeRef=637,559 Selected=0x7CAC602A
+    DockNode    ID=0x00000002 Parent=0x00000005 SizeRef=741,720 Split=Y Selected=0x995B0CF8
+      DockNode  ID=0x00000007 Parent=0x00000002 SizeRef=448,507 CentralNode=1 Selected=0x995B0CF8
+      DockNode  ID=0x00000008 Parent=0x00000002 SizeRef=448,211 Selected=0xB42549D5
+  DockNode      ID=0x00000006 Parent=0x6F13380E SizeRef=241,720 Selected=0xA115F62D
 )";
 
 class UiWindow {
@@ -72,8 +82,17 @@ public:
 
   template<class... Args>
   UiWindow(std::string name, Args... args) : name(name), show_callback(args...) {}
-  virtual void show() = 0;
+  virtual void show() {
+    //if (!active) return;
+    if (!ImGui::Begin((char*)name.c_str())) { //, &active)) {
+      ImGui::End();
+      return;
+    }
+    if (show_callback) show_callback(this);
+    ImGui::End();
+  }
   std::string name;
+  //bool active = true;
   std::function<void(UiWindow*)> show_callback;
 };
 
@@ -83,7 +102,7 @@ public:
   ~UserInterface();
 
   template <typename T, class... Args>
-  std::shared_ptr<T> addElement(std::string id, Args... args) {
+  std::shared_ptr<T> addElement(std::string id, Args&&... args) {
     if (ui_elements.find(id) != ui_elements.end()) throw std::runtime_error("UI IDs must be unique"); //todo: gracefulness
     auto element = std::make_shared<T>(id, args...);
     ui_elements[id] = element;
@@ -117,8 +136,6 @@ struct StatusWindow : public UiWindow {
 
     ImGui::SameLine();
     ImGui::Text("counter = %d", counter);
-
-    if (ImGui::Button("Break into Debugger")) Kernel::execution_break();
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();

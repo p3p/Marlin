@@ -160,27 +160,21 @@ public:
 
 class Visualisation {
 public:
-  Visualisation();
+  Visualisation(VirtualPrinter& virtual_printer);
   ~Visualisation();
   void create();
   void process_event(SDL_Event& e);
 
-  LinearAxis x_axis;
-  LinearAxis y_axis;
-  LinearAxis z_axis;
-  LinearAxis extruder0;
-  PrintBed print_bed;
-  glm::vec3 bed_level_point[3] = {{build_plate_dimension.x / 2, build_plate_dimension.y,0},{0,0,0},{build_plate_dimension.x,0,0}};
-  #if HAS_BED_PROBE
-    BedProbe probe;
-  #endif
+  VirtualPrinter& virtual_printer;
+
+  glm::vec3 bed_level_point[3] = {{build_plate_dimension.x / 2, build_plate_dimension.y,0}, {0,0,0}, {build_plate_dimension.x,0,0}};
 
   float ui_realtime_scale = 0.0f;
 
   void gpio_event_handler(GpioEvent& event);
   void update();
   void destroy();
-  void on_position_update(LinearAxis&);
+  void on_position_update();
 
   void ui_viewport_callback(UiWindow*);
   void ui_info_callback(UiWindow*);
