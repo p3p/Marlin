@@ -1,7 +1,8 @@
 #ifdef __PLAT_NATIVE_SIM__
 
 #include <SDL2/SDL.h>
-#include <GL/glew.h>
+#include <glad/glad.h>
+
 #include <imgui.h>
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
@@ -61,8 +62,8 @@ WindowReturnCode sdl_window_create(WindowConfig config = {}) {
   SDL_GL_MakeCurrent(window, gl_context);
   SDL_GL_SetSwapInterval(config.vsync);
 
-  if ( glewInit() != GLEW_OK ) {
-    fprintf(stderr, "glewInit: Failed to initialize OpenGL loader!\n");
+  if (!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
+    fprintf(stderr, "gladLoadGLLoader: Failed to initialize OpenGL loader!\n");
     return WindowReturnCode::GLEW_INIT_FAILED;
   }
 

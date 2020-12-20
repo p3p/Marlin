@@ -7,9 +7,8 @@
 #include "hardware/print_bed.h"
 #include "hardware/bed_probe.h"
 
-#include <GL/glew.h>
+#include <gl.h>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
 
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
@@ -166,10 +165,6 @@ public:
   void process_event(SDL_Event& e);
 
   VirtualPrinter& virtual_printer;
-
-  glm::vec3 bed_level_point[3] = {{build_plate_dimension.x / 2, build_plate_dimension.y,0}, {0,0,0}, {build_plate_dimension.x,0,0}};
-
-  float ui_realtime_scale = 0.0f;
 
   void gpio_event_handler(GpioEvent& event);
   void update();

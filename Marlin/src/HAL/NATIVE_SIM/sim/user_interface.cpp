@@ -1,7 +1,7 @@
 #ifdef __PLAT_NATIVE_SIM__
 
 #include <SDL2/SDL.h>
-#include <GL/glew.h>
+#include <gl.h>
 #include <imgui.h>
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
