@@ -145,7 +145,7 @@ void Visualisation::create() {
     })SHADERSTR";
 
   const char * path_vertex_shader = R"SHADERSTR(
-    #version 330
+    #version 330 core
     in vec3 i_position;
     in vec3 i_normal;
     in vec4 i_color;
@@ -158,7 +158,7 @@ void Visualisation::create() {
     })SHADERSTR";
 
   const char * path_fragment_shader = R"SHADERSTR(
-    #version 330
+    #version 330 core
     in vec4 v_color;
     out vec4 o_color;
     in vec3 v_normal;
@@ -197,7 +197,7 @@ void Visualisation::create() {
     })SHADERSTR";
 
   const char * vertex_shader = R"SHADERSTR(
-    #version 330
+    #version 330 core
     in vec3 i_position;
     in vec3 i_normal;
     in vec4 i_color;
@@ -213,7 +213,7 @@ void Visualisation::create() {
     })SHADERSTR";
 
   const char * fragment_shader = R"SHADERSTR(
-    #version 330
+    #version 330 core
     in vec4 v_color;
     in vec3 v_normal;
     in vec3 v_position;

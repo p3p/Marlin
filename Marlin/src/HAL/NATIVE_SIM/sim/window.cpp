@@ -16,7 +16,7 @@ bool window_valid = false;
 bool imgui_initialised = false;
 
 WindowReturnCode sdl_window_create(WindowConfig config = {}) {
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
+  if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("SDL_Init Error: %s\n", SDL_GetError());
     return WindowReturnCode::SDL_INIT_FAILED;
   }
@@ -39,7 +39,6 @@ WindowReturnCode sdl_window_create(WindowConfig config = {}) {
   if (config.multisamples) {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, config.multisamples);
-    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
   }
 
   // Create window with graphics context
@@ -107,7 +106,7 @@ WindowReturnCode imgui_create() {
     fprintf(stderr, "ImGui_ImplSDL2_InitForOpenGL: Failed to init Imgui SDL2 support!\n");
     return WindowReturnCode::IMGUI_SDLINIT_FAIL;
   }
-  if (!ImGui_ImplOpenGL3_Init("#version 410")) {
+  if (!ImGui_ImplOpenGL3_Init("#version 330 core")) {
     fprintf(stderr, "ImGui_ImplOpenGL3_Init:Failed to init Imgui OpenGL3 support!\n");
     return WindowReturnCode::IMGUI_GLINIT_FAIL;
   }

@@ -20,7 +20,7 @@ struct WindowConfig {
     CORE           = 0x0001,
     COMPATIBILITY  = 0x0002,
     ES             = 0x0004
-};
+  };
 
   std::string title = "Marlin Simulator";
   GLuint gl_version_major = 3, gl_version_minor = 3, gl_profile = GlProfile::CORE, multisamples = 4, vsync = 1;
