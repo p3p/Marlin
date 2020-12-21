@@ -27,7 +27,7 @@
 #include "LinearAxis.h"
 
 LinearAxis::LinearAxis(uint32_t steps_per_unit, float max_position_logical, pin_type enable, pin_type dir, pin_type step, pin_type end_min, pin_type end_max, bool invert_travel, std::function<void()> update_position_callback) :
-  VirtualPrinter::Component("LinearAxis"), steps_per_unit(steps_per_unit), max_position(max_position_logical * steps_per_unit), enable_pin(enable), dir_pin(dir), step_pin(step), min_pin(end_min), max_pin(end_max), invert_travel(invert_travel ? -1 : 1), update_position_callback(update_position_callback)
+  VirtualPrinter::Component("LinearAxis"), steps_per_unit(steps_per_unit), max_position(max_position_logical * steps_per_unit), enable_pin(enable), dir_pin(dir), step_pin(step), min_pin(end_min), max_pin(end_max), invert_travel(invert_travel ? -1 : 1), update_position_callback(update_position_callback), max_position_logical(max_position_logical)
  {
   min_position = 0;
   // max_position = (200 * steps_per_unit) + min_position;

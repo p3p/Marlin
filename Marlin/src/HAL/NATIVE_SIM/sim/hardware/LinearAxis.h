@@ -54,7 +54,7 @@ public:
     }
     ImGui::PopItemWidth();
     float pos = position.load() / (float)steps_per_unit;
-    if (ImGui::SliderFloat("Position(mm)", &pos, 0.0f, 200.0f)) {
+    if (ImGui::SliderFloat("Position(mm)", &pos, min_position_logical, max_position_logical)) {
       position_logical = pos;
       position.store(pos * steps_per_unit);
       update_position_callback();
@@ -78,6 +78,4 @@ private:
   std::function<void()> update_position_callback;
   float min_position_logical = 0;
   float max_position_logical = 0;
-  std::string min_pos_label;
-  std::string max_pos_label;
 };

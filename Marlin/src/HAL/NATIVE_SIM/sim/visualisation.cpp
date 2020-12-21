@@ -384,13 +384,13 @@ void Visualisation::set_head_position(glm::vec4 position) {
     } else { // need to change geometry buffer
       if (active_path_block == nullptr) {
         full_path.push_back({{position, {0.0, 1.0, 0.0}, {1.0, 0.0, 0.0, 0.0}}});
-        full_path.back().reserve(10100);
+        full_path.back().reserve(10000);
         active_path_block = &full_path.end()[-1];
         active_path_block->push_back(active_path_block->back());
         last_extrusion_check = position;
       } else {
         full_path.push_back({full_path.back().back()});
-        full_path.back().reserve(10100);
+        full_path.back().reserve(10000);
         active_path_block = &full_path.end()[-1];
         active_path_block->push_back({position, {0.0, 1.0, 0.0}, {1.0, 0.0, 0.0, extruding}});
         active_path_block->push_back(active_path_block->back());
