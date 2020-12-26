@@ -13,6 +13,7 @@ public:
   virtual ~XPT2046Device() {};
 
   void update() {}
+  void ui_widget();
   void ui_callback();
 
   void onByteReceived(uint8_t _byte) override;

@@ -52,6 +52,11 @@ void XPT2046Device::onEndTransaction() {
   }
 };
 
+void XPT2046Device::ui_widget() {
+  ImGui::Text("X: %d", lastClickX);
+  ImGui::Text("Y: %d", lastClickY);
+}
+
 void XPT2046Device::ui_callback() {
   if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
     dirty = true;

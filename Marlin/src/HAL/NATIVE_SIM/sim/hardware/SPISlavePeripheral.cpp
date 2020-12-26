@@ -1,6 +1,6 @@
 #include "SPISlavePeripheral.h"
 
-SPISlavePeripheral::SPISlavePeripheral(pin_type clk, pin_type miso, pin_type mosi, pin_type cs, uint8_t CPOL, uint8_t CPHA) : clk_pin(clk), miso_pin(miso), mosi_pin(mosi), cs_pin(cs), CPOL(CPOL), CPHA(CPHA) {
+SPISlavePeripheral::SPISlavePeripheral(pin_type clk, pin_type miso, pin_type mosi, pin_type cs, uint8_t CPOL, uint8_t CPHA) : VirtualPrinter::Component("SPISlavePeripheral"), clk_pin(clk), miso_pin(miso), mosi_pin(mosi), cs_pin(cs), CPOL(CPOL), CPHA(CPHA) {
   Gpio::attach(clk_pin, [this](GpioEvent& event){ this->spiInterrupt(event); });
   Gpio::attach(cs_pin, [this](GpioEvent& event){ this->spiInterrupt(event); });
 }

@@ -11,48 +11,57 @@
 class VirtualPrinter {
 public:
   struct Component {
-    Component() : identifier("UnnamedComponent") {
-      printf("VirtualPrinter::Component[%s]: contruct\n", identifier.c_str());
-    }
-    Component(std::string identifier) : identifier(identifier) {
-      printf("VirtualPrinter::Component[%s]: contruct\n", identifier.c_str());
-    }
-    virtual ~Component() {
-      printf("VirtualPrinter::Component[%s]: decontruct\n", identifier.c_str());
-    }
+    Component() : identifier("UnnamedComponent") {}
+    Component(std::string identifier) : identifier(identifier) {}
+    virtual ~Component() {}
 
     virtual void update() {};
     virtual void ui_init() {};
     virtual void ui_widget() {};
+    virtual void ui_widgets();
 
+    template<typename T, class... Args>
+    auto add_component(std::string name, Args&&... args) {
+      auto component = VirtualPrinter::add_component<T>(name, args...);
+      component->parent = get_component<Component>(this->name);
+      children.push_back(component);
+      return component;
+    }
+
+    std::string name;
     const std::string identifier;
+
+    std::shared_ptr<Component> parent;
+    std::vector<std::shared_ptr<Component>> children;
   };
 
-  void update() {
-    for(auto const& it : components) it.second->update();
+  static void update() {
+    for(auto const& it : components) it->update();
   }
 
-  void ui_widgets();
+  static void ui_widgets();
 
-  void build();
-  void update_kinematics();
+  static void build();
+  static void update_kinematics();
 
   template<typename T, class... Args>
-  auto add_component(std::string name, Args&&... args) {
+  static auto add_component(std::string name, Args&&... args) {
     auto component = std::make_shared<T>(args...);
-    components[name] = component;
+    component->name = name;
+    components.push_back(component);
+    component_map[name] = component;
     return component;
   }
 
   template<typename T>
-  auto get_component(std::string name) {
-    return std::static_pointer_cast<T>(components[name]);
+  static auto get_component(std::string name) {
+    return std::static_pointer_cast<T>(component_map[name]);
   }
 
-  glm::vec4 effector_pos{};
-  std::function<void(glm::vec4)> on_kinematic_update;
+  static std::function<void(glm::vec4)> on_kinematic_update;
 
 private:
-  std::map<std::string, std::shared_ptr<Component>> components;
-  std::vector<std::shared_ptr<Component>> steppers;
+  static std::map<std::string, std::shared_ptr<Component>> component_map;
+  static std::vector<std::shared_ptr<Component>> components;
+  static std::shared_ptr<Component> root;
 };

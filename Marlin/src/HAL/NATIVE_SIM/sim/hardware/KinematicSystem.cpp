@@ -6,6 +6,19 @@
 
 constexpr float steps_per_unit[] = DEFAULT_AXIS_STEPS_PER_UNIT;
 
+KinematicSystem::KinematicSystem(std::function<void(glm::vec4)> on_kinematic_update) : VirtualPrinter::Component("Kinematic System"), on_kinematic_update(on_kinematic_update) {
+
+  steppers.push_back(add_component<StepperDriver>("Stepper0", X_ENABLE_PIN, X_DIR_PIN, X_STEP_PIN, [this](){ this->kinematic_update(); }));
+  steppers.push_back(add_component<StepperDriver>("Stepper1", Y_ENABLE_PIN, Y_DIR_PIN, Y_STEP_PIN, [this](){ this->kinematic_update(); }));
+  steppers.push_back(add_component<StepperDriver>("Stepper2", Z_ENABLE_PIN, Z_DIR_PIN, Z_STEP_PIN, [this](){ this->kinematic_update(); }));
+  steppers.push_back(add_component<StepperDriver>("Stepper3", E0_ENABLE_PIN, E0_DIR_PIN, E0_STEP_PIN, [this](){ this->kinematic_update(); }));
+
+  srand(time(0));
+  origin.x = (rand() % (X_MAX_POS - X_MIN_POS)) + X_MIN_POS;
+  origin.y = (rand() % (Y_MAX_POS - Y_MIN_POS)) + Y_MIN_POS;
+  origin.z = (rand() % (Z_MAX_POS - Z_MIN_POS)) + Z_MIN_POS;
+}
+
 void KinematicSystem::kinematic_update() {
   stepper_position = glm::vec4{
     std::static_pointer_cast<StepperDriver>(steppers[0])->steps() / steps_per_unit[0] * (((INVERT_X_DIR * 2) - 1) * -1.0),

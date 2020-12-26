@@ -74,5 +74,5 @@ public:
   float scaler;
   GLuint texture_id;
 
-  XPT2046Device touch;
+  std::shared_ptr<XPT2046Device> touch;
 };
