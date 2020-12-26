@@ -15,7 +15,6 @@
 #include <imgui_internal.h>
 #include <implot.h>
 
-#include "hardware/LinearAxis.h"
 #include "src/inc/MarlinConfig.h"
 #include "src/module/motion.h"
 
@@ -358,7 +357,8 @@ void Visualisation::destroy() {
   }
 }
 
-void Visualisation::set_head_position(glm::vec4 position) {
+void Visualisation::set_head_position(glm::vec4 sim_pos) {
+  glm::vec4 position = {sim_pos.x, sim_pos.z, sim_pos.y * -1.0, sim_pos.w}; // correct for opengl coordinate system
   if (position != effector_pos) {
 
     if (glm::length(glm::vec3(position) - glm::vec3(last_extrusion_check)) > 0.5f) { // smooths out extrusion over a minimum length to fill in gaps todo: implement an simulation to do this better

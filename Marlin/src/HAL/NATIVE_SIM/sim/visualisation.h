@@ -3,7 +3,6 @@
 #include <vector>
 #include <array>
 
-#include "hardware/LinearAxis.h"
 #include "hardware/print_bed.h"
 #include "hardware/bed_probe.h"
 

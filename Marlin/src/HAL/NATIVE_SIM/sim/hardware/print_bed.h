@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <imgui.h>
 
 #include "Gpio.h"
 #include "print_bed.h"

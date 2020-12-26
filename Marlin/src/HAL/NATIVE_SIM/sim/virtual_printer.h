@@ -54,5 +54,5 @@ public:
 
 private:
   std::map<std::string, std::shared_ptr<Component>> components;
-  std::vector<std::shared_ptr<Component>> linear_axis;
+  std::vector<std::shared_ptr<Component>> steppers;
 };

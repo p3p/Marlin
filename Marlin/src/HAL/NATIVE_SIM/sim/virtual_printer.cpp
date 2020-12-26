@@ -1,8 +1,10 @@
 #include <imgui.h>
 
+
+#include "hardware/StepperDriver.h"
+#include "hardware/EndStop.h"
 #include "hardware/Heater.h"
 #include "hardware/print_bed.h"
-#include "hardware/LinearAxis.h"
 #include "hardware/print_bed.h"
 #include "hardware/bed_probe.h"
 #include "hardware/ST7796Device.h"
@@ -11,34 +13,28 @@
 #include "hardware/SDCard.h"
 #include "hardware/W25QxxDevice.h"
 #include "hardware/FilamentRunoutSensor.h"
+#include "hardware/KinematicSystem.h"
 
 #include "virtual_printer.h"
 
 #include "src/inc/MarlinConfig.h"
 
-constexpr uint32_t steps_per_unit[] = DEFAULT_AXIS_STEPS_PER_UNIT;
-
-void VirtualPrinter::update_kinematics() {
-  effector_pos = glm::vec4{
-    std::static_pointer_cast<LinearAxis>(linear_axis[0])->position_logical,
-    std::static_pointer_cast<LinearAxis>(linear_axis[2])->position_logical,
-    std::static_pointer_cast<LinearAxis>(linear_axis[1])->position_logical * -1.0f,
-    std::static_pointer_cast<LinearAxis>(linear_axis[3])->position_logical
-  };
-
-  on_kinematic_update(effector_pos);
-}
-
 void VirtualPrinter::build() {
-  linear_axis.push_back(add_component<LinearAxis>("X Axis", steps_per_unit[0], X_BED_SIZE, X_ENABLE_PIN, X_DIR_PIN, X_STEP_PIN, X_MIN_PIN, X_MAX_PIN, INVERT_X_DIR, [this](){this->update_kinematics();}));
-  linear_axis.push_back(add_component<LinearAxis>("Y Axis", steps_per_unit[1], Y_BED_SIZE, Y_ENABLE_PIN, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN, INVERT_Y_DIR, [this](){this->update_kinematics();}));
-  linear_axis.push_back(add_component<LinearAxis>("Z Axis", steps_per_unit[2], Z_MAX_POS, Z_ENABLE_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN, INVERT_Z_DIR, [this](){this->update_kinematics();}));
-  linear_axis.push_back(add_component<LinearAxis>("E Axis", steps_per_unit[3], 0, E0_ENABLE_PIN, E0_DIR_PIN, E0_STEP_PIN, P_NC, P_NC, INVERT_E0_DIR, [this](){this->update_kinematics();}));
+  steppers.push_back(add_component<StepperDriver>("Stepper0", X_ENABLE_PIN, X_DIR_PIN, X_STEP_PIN));
+  steppers.push_back(add_component<StepperDriver>("Stepper1", Y_ENABLE_PIN, Y_DIR_PIN, Y_STEP_PIN));
+  steppers.push_back(add_component<StepperDriver>("Stepper2", Z_ENABLE_PIN, Z_DIR_PIN, Z_STEP_PIN));
+  steppers.push_back(add_component<StepperDriver>("Stepper3", E0_ENABLE_PIN, E0_DIR_PIN, E0_STEP_PIN));
+
+  auto kinematics = add_component<KinematicSystem>("Kinematic System", steppers, on_kinematic_update);
+
+  add_component<EndStop>("Endstop(X min)", X_MIN_PIN, X_MIN_ENDSTOP_INVERTING, [kinematics](){ return kinematics->effector_position.x <= 0; });
+  add_component<EndStop>("Endstop(Y min)", Y_MIN_PIN, Y_MIN_ENDSTOP_INVERTING, [kinematics](){ return kinematics->effector_position.y <= 0; });
+  add_component<EndStop>("Endstop(Z min)", Z_MIN_PIN, Z_MIN_ENDSTOP_INVERTING, [kinematics](){ return kinematics->effector_position.z <= 0; });
 
   auto print_bed = add_component<PrintBed>("Print Bed", glm::vec2{X_BED_SIZE, Y_BED_SIZE});
 
   #if HAS_BED_PROBE
-    add_component<BedProbe>("Probe", Z_MIN_PROBE_PIN, glm::vec3 NOZZLE_TO_PROBE_OFFSET, effector_pos, *print_bed);
+    add_component<BedProbe>("Probe", Z_MIN_PROBE_PIN, glm::vec3 NOZZLE_TO_PROBE_OFFSET, kinematics->effector_position, *print_bed);
   #endif
 
   add_component<Heater>("Hotend Heater", HEATER_0_PIN, TEMP_0_PIN, heater_data{12, 3.6}, hotend_data{13, 20, 0.897}, adc_data{4700, 12});
@@ -63,7 +59,8 @@ void VirtualPrinter::build() {
 
   for(auto const& component : components) component.second->ui_init();
 
-  update_kinematics();
+  kinematics->kinematic_update();
+
 }
 
 void VirtualPrinter::ui_widgets() {
