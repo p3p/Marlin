@@ -36,7 +36,19 @@ Application::Application() {
     ImGui::PushItemWidth(-1);
     ImGui::SliderFloat("##SimSpeed", &ui_realtime_scale, 0.0f, 100.0f, "%.3f", 3.0f);
     ImGui::PopItemWidth();
-    if (ImGui::Button("Pause")) ui_realtime_scale = 0.0f;
+    static float resume_scale = ui_realtime_scale;
+    static bool paused = false;
+    if (!paused) {
+      if (ImGui::Button("Pause")) {
+        resume_scale = ui_realtime_scale;
+        ui_realtime_scale = 0.0f;
+        paused = true;
+      }
+    } else if (ImGui::Button("Resume")) {
+      ui_realtime_scale = resume_scale;
+      paused = false;
+    }
+
     ImGui::SameLine();
     if (ImGui::Button("Realtime")) ui_realtime_scale = 1.0f;
     ImGui::SameLine();
