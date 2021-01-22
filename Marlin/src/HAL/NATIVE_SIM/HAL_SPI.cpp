@@ -62,20 +62,20 @@ uint8_t swSpiTransfer_mode_0(uint8_t b, const uint8_t spi_speed, const pin_t sck
 }
 
 static uint8_t spiTransfer(uint8_t b) {
-  return swSpiTransfer_mode_0(b, SPI_speed, SCK_PIN, MISO_PIN, MOSI_PIN);
+  return swSpiTransfer_mode_0(b, SPI_speed, SD_SCK_PIN, SD_MISO_PIN, SD_MOSI_PIN);
 }
 
 void spiBegin() {
-  OUT_WRITE(SS_PIN, HIGH);
-  SET_OUTPUT(SCK_PIN);
-  SET_INPUT(MISO_PIN);
-  SET_OUTPUT(MOSI_PIN);
+  OUT_WRITE(SD_SS_PIN, HIGH);
+  SET_OUTPUT(SD_SCK_PIN);
+  SET_INPUT(SD_MISO_PIN);
+  SET_OUTPUT(SD_MOSI_PIN);
 }
 
 void spiInit(uint8_t spiRate) {
-  // SPI_speed = swSpiInit(spiRate, SCK_PIN, MOSI_PIN);
-  WRITE(MOSI_PIN, HIGH);
-  WRITE(SCK_PIN, LOW);
+  // SPI_speed = swSpiInit(spiRate, SD_SCK_PIN, SD_MOSI_PIN);
+  WRITE(SD_MOSI_PIN, HIGH);
+  WRITE(SD_SCK_PIN, LOW);
 }
 
 uint8_t spiRec() { return spiTransfer(0xFF); }

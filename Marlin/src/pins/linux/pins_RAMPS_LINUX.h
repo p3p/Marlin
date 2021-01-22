@@ -398,8 +398,8 @@
   #define TFT_A0_PIN            43
   #define TFT_CS_PIN            49
   #define TFT_DC_PIN            43
-  #define TFT_SCK_PIN           SCK_PIN
-  #define TFT_MOSI_PIN          MOSI_PIN
+  #define TFT_SCK_PIN           SD_SCK_PIN
+  #define TFT_MOSI_PIN          SD_MOSI_PIN
   #define LCD_USE_DMA_SPI
 
   #define BTN_EN1                         40
@@ -415,9 +415,9 @@
     #define SPI_DEVICE                     1
     #define SPI_FLASH_SIZE         0x1000000  // 16MB
     #define W25QXX_CS_PIN                 31
-    #define W25QXX_MOSI_PIN         MOSI_PIN
-    #define W25QXX_MISO_PIN         MISO_PIN
-    #define W25QXX_SCK_PIN           SCK_PIN
+    #define W25QXX_MOSI_PIN         SD_MOSI_PIN
+    #define W25QXX_MISO_PIN         SD_MISO_PIN
+    #define W25QXX_SCK_PIN          SD_SCK_PIN
   #endif
 
   #define TFT_BUFFER_SIZE             0xFFFF
