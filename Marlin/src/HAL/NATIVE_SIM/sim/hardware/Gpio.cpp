@@ -23,6 +23,6 @@
 
 #include "Gpio.h"
 
-pin_data Gpio::pin_map[Gpio::pin_count + 1] = {};
+pin_data Gpio::pin_map[Gpio::pin_count] = {};
 
 #endif // __PLAT_NATIVE_SIM__

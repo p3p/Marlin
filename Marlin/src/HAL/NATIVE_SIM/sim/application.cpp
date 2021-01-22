@@ -7,6 +7,10 @@
 #include "user_interface.h"
 #include "application.h"
 
+#include "../HAL.h"
+#include <src/MarlinCore.h>
+#include <src/pins/pinsDebug.h>
+
 Application::Application() {
   sim.vis.create();
 
@@ -27,7 +31,6 @@ Application::Application() {
     uint64_t seconds = remainder / (Kernel::TimeControl::ONE_BILLION);
     remainder = remainder % (Kernel::TimeControl::ONE_BILLION);
     ImGui::Text("%02ld:%02ld:%02ld.%09ld", hours, mins, seconds, remainder); //TODO: work around cross platform format string differences
-
     // Simulation Control
     auto ui_realtime_scale = Kernel::TimeControl::realtime_scale.load();
     ImGui::PushItemWidth(-1);
@@ -41,6 +44,82 @@ Application::Application() {
     ImGui::SameLine();
     if (ImGui::Button("Break")) Kernel::execution_break();
     Kernel::TimeControl::realtime_scale.store(ui_realtime_scale);
+  });
+
+  user_interface.addElement<UiWindow>("Pin List", [this](UiWindow* window){
+    for (auto p : pin_array) {
+      bool value = Gpio::get_pin_value(p.pin);
+      ImGui::Checkbox((std::string("##") + p.name).c_str(), &value);
+      ImGui::SameLine();
+      ImGui::Text("[%04d]", Gpio::get_pin_value(p.pin));
+      ImGui::SameLine();
+      ImGui::Text("%s", p.name);
+    }
+  });
+
+  user_interface.addElement<UiWindow>("Signal Analyser", [this](UiWindow* window){
+    struct ScrollingData {
+      int MaxSize;
+      int Offset;
+      ImVector<ImPlotPoint> Data;
+      ScrollingData() {
+          MaxSize = 100000;
+          Offset  = 0;
+          Data.reserve(MaxSize);
+      }
+      void AddPoint(double x, double y) {
+          if (Data.size() < MaxSize)
+              Data.push_back(ImPlotPoint(x,y));
+          else {
+              Data[Offset] = ImPlotPoint(x,y);
+              Offset =  (Offset + 1) % MaxSize;
+          }
+      }
+      void Erase() {
+          if (Data.size() > 0) {
+              Data.shrink(0);
+              Offset  = 0;
+          }
+      }
+    };
+
+    static pin_type monitor_pin = X_STEP_PIN;
+    static const char* label = "Select Pin";
+    static char* active_label = (char *)label;
+    if(ImGui::BeginCombo("##Select Pin", active_label)) {
+      for (auto p : pin_array) {
+        if (ImGui::Selectable(p.name, p.pin == monitor_pin)) {
+          monitor_pin = p.pin;
+          active_label = (char *)p.name;
+        }
+        if (p.pin == monitor_pin) ImGui::SetItemDefaultFocus();
+      }
+      ImGui::EndCombo();
+    }
+
+    if (Gpio::pin_map[monitor_pin].event_log.size()) {
+      ScrollingData sdata;
+
+      pin_log_data last{};
+      for (auto v : Gpio::pin_map[monitor_pin].event_log) {
+        if (last.timestamp) sdata.AddPoint(v.timestamp, last.value);
+        sdata.AddPoint(v.timestamp, v.value);
+        last = v;
+      }
+      sdata.AddPoint(Kernel::SimulationRuntime::nanos(),  last.value);
+
+      static float window = 10000000000.0f;
+      ImGui::SliderFloat("Window", &window, 10.f, 100000000000.f,"%.0f ns");
+      static float offset = 0.0f;
+      ImGui::SliderFloat("X offset", &offset, 0.f, 10000000000.f,"%.0f ns");
+      ImPlot::SetNextPlotLimitsX(Kernel::SimulationRuntime::nanos() - window - offset, Kernel::SimulationRuntime::nanos() - offset, ImGuiCond_Always);
+      ImPlot::SetNextPlotLimitsY(0.0f, 1.2f, ImGuiCond_Always);
+      static int rt_axis = ImPlotAxisFlags_Default | ImPlotAxisFlags_LockMin;
+      if (ImPlot::BeginPlot("##Scrolling", "Time (ns)", NULL, ImVec2(-1,150), ImPlotFlags_Default | ImPlotFlags_Query, rt_axis & ~ImPlotAxisFlags_TickLabels, rt_axis)) {
+        ImPlot::PlotLine("pin", &sdata.Data[0].x, &sdata.Data[0].y, sdata.Data.size(), sdata.Offset, sizeof(ImPlotPoint));
+        ImPlot::EndPlot();
+      }
+    }
   });
 
 }

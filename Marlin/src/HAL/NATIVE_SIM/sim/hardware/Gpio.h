@@ -25,6 +25,7 @@
 #include <atomic>
 #include <functional>
 #include <vector>
+#include <deque>
 
 #include "../execution_control.h"
 #include "src/inc/MarlinConfigPre.h"
@@ -53,6 +54,11 @@ class IOLogger {
 public:
   virtual ~IOLogger(){};
   virtual void log(GpioEvent ev) = 0;
+};
+
+struct pin_log_data {
+  uint64_t timestamp;
+  uint16_t value;
 };
 
 struct pin_data {
@@ -87,16 +93,20 @@ struct pin_data {
   std::atomic_uint8_t mode;
   std::atomic_uint16_t value;
   std::vector<std::function<void(GpioEvent&)>> callbacks;
+  bool event_log_enabled = false;
+  std::deque<pin_log_data> event_log;
 };
 
 class Gpio {
 public:
 
-  static const pin_type pin_count = 255;
+  static const pin_type pin_count = 256;
 
   static void set_pin_value(const pin_type pin, const uint16_t value) {
     if (!valid_pin(pin)) return;
     pin_map[pin].value = value;
+    pin_map[pin].event_log.push_back(pin_log_data{Kernel::TimeControl::nanos(), pin_map[pin].value});
+    if (pin_map[pin].event_log.size() > 100000) pin_map[pin].event_log.pop_front();
   }
 
   static uint16_t get_pin_value(const pin_type pin) {
@@ -117,6 +127,8 @@ public:
     GpioEvent::Type evt_type = value > 1 ? GpioEvent::SET_VALUE : value > pin_map[pin].value ? GpioEvent::RISE : value < pin_map[pin].value ? GpioEvent::FALL : GpioEvent::NOP;
     pin_map[pin].value = value;
     GpioEvent evt(Kernel::TimeControl::getTicks(), pin, evt_type);
+    pin_map[pin].event_log.push_back(pin_log_data{Kernel::TimeControl::nanos(), pin_map[pin].value});
+    if (pin_map[pin].event_log.size() > 100000) pin_map[pin].event_log.pop_front();
     for (auto callback : pin_map[pin].callbacks) callback(evt);
   }
 
@@ -168,6 +180,5 @@ public:
     return pin_map[pin].attach(args...);
   }
 
-private:
-  static pin_data pin_map[pin_count + 1];
+  static pin_data pin_map[pin_count];
 };

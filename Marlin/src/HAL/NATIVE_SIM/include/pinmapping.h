@@ -29,8 +29,8 @@
 typedef pin_type pin_t;
 
 #define P_NC -1
-constexpr uint16_t NUM_DIGITAL_PINS = Gpio::pin_count;
-constexpr uint8_t NUM_ANALOG_INPUTS = 16;
+#define NUM_DIGITAL_PINS 256
+#define NUM_ANALOG_INPUTS 16
 
 #define HAL_SENSITIVE_PINS
 
