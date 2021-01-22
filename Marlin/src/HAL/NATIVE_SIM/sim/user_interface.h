@@ -65,6 +65,18 @@ Size=294,559
 Collapsed=0
 DockId=0x00000004,0
 
+[Window][Signal Analyser]
+Pos=296,0
+Size=741,507
+Collapsed=0
+DockId=0x00000007,1
+
+[Window][Pin List]
+Pos=1039,0
+Size=241,720
+Collapsed=0
+DockId=0x00000006,1
+
 [Docking][Data]
 DockSpace       ID=0x6F13380E Window=0x49B6D357 Pos=0,0 Size=1280,720 Split=X
   DockNode      ID=0x00000005 Parent=0x6F13380E SizeRef=1037,720 Split=X
