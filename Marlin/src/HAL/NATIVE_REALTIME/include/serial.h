@@ -145,8 +145,8 @@ struct HalSerial {
       while (transmit_buffer.available()) { /* nada */ }
   }
 
-  volatile RingBuffer<uint8_t, 128> receive_buffer;
-  volatile RingBuffer<uint8_t, 128> transmit_buffer;
+  RingBuffer<uint8_t, 128> receive_buffer;
+  RingBuffer<uint8_t, 128> transmit_buffer;
   volatile bool host_connected;
 };
 

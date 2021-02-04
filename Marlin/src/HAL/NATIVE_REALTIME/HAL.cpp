@@ -24,7 +24,7 @@
 #include <src/inc/MarlinConfig.h>
 #include "../shared/Delay.h"
 
-HalSerial usb_serial;
+HalSerial usb_serial(false);
 
 // U8glib required functions
 extern "C" void u8g_xMicroDelay(uint16_t val) {

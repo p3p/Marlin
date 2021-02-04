@@ -158,7 +158,7 @@ struct StatusWindow : public UiWindow {
 };
 
 #include <serial.h>
-extern HalSerial usb_serial;
+extern MSerialT usb_serial;
 
 struct SerialMonitor : public UiWindow {
   SerialMonitor(std::string name) : UiWindow(name) {};
