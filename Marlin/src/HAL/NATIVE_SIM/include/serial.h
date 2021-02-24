@@ -152,8 +152,11 @@ struct HalSerial {
   }
 
   void flushTX() {
-    if (host_connected)
-      while (transmit_buffer.available()) { /* nada */ }
+    if (host_connected) {
+      while (transmit_buffer.available()) {
+        Kernel::yield();
+      }
+    }
   }
 
   static constexpr std::size_t receive_buffer_size = 32768;
