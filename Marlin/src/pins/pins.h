@@ -679,7 +679,7 @@
 //
 
 #elif MB(LINUX_RAMPS)
-  #include "linux/pins_RAMPS_LINUX.h"           // Linux                                  env:linux_native
+  #include "linux/pins_RAMPS_LINUX.h"           // Realtime or Simulation                   lin:linux_realtime mac:simulator_macos_debug mac:simulator_macos_release win:simulator_win lin:simulator_linux_debug lin:simulator_linux_release
 
 #else
 
