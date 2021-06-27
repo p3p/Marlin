@@ -21,25 +21,23 @@
  */
 #pragma once
 
-#include <chrono>
-#include "Gpio.h"
+#include "Clock.h"
+#include <src/inc/MarlinConfigPre.h>
+#include <stdint.h>
 
-class LinearAxis: public Peripheral {
-public:
-  LinearAxis(pin_type enable, pin_type dir, pin_type step, pin_type end_min, pin_type end_max);
-  virtual ~LinearAxis();
-  void update();
-  void interrupt(GpioEvent ev);
+typedef int16_t pin_type;
 
-  pin_type enable_pin;
-  pin_type dir_pin;
-  pin_type step_pin;
-  pin_type min_pin;
-  pin_type max_pin;
+struct Gpio {
+  static constexpr pin_type pin_count = 255;
 
-  int32_t position;
-  int32_t min_position;
-  int32_t max_position;
-  uint64_t last_update;
-
+  static bool valid_pin(pin_type pin);
+  static void set(pin_type pin);
+  static void set(pin_type pin, bool value);
+  static bool get(pin_type pin);
+  static uint16_t get_adc(pin_type pin);
+  static void clear(pin_type pin);
+  static void setMode(pin_type pin, uint8_t value);
+  static uint8_t getMode(pin_type pin);
+  static void setDir(pin_type pin, uint8_t value);
+  static uint8_t getDir(pin_type pin);
 };

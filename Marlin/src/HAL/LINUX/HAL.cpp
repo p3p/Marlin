@@ -19,21 +19,26 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-#ifdef __PLAT_LINUX__
+#ifdef __PLAT_LINUX_REALTIME__
 
-#include "../../inc/MarlinConfig.h"
+#include <src/inc/MarlinConfig.h>
 #include "../shared/Delay.h"
 
 MSerialT usb_serial(TERN0(EMERGENCY_PARSER, true));
 
 // U8glib required functions
-extern "C" {
-  void u8g_xMicroDelay(uint16_t val) { DELAY_US(val); }
-  void u8g_MicroDelay()              { u8g_xMicroDelay(1); }
-  void u8g_10MicroDelay()            { u8g_xMicroDelay(10); }
-  void u8g_Delay(uint16_t val)       { delay(val); }
+extern "C" void u8g_xMicroDelay(uint16_t val) {
+  DELAY_US(val);
 }
-
+extern "C" void u8g_MicroDelay() {
+  u8g_xMicroDelay(1);
+}
+extern "C" void u8g_10MicroDelay() {
+  u8g_xMicroDelay(10);
+}
+extern "C" void u8g_Delay(uint16_t val) {
+  delay(val);
+}
 //************************//
 
 // return free heap space
@@ -65,7 +70,7 @@ bool HAL_adc_finished() {
 uint16_t HAL_adc_get_result() {
   pin_t pin = analogInputToDigitalPin(active_ch);
   if (!VALID_PIN(pin)) return 0;
-  uint16_t data = ((Gpio::get(pin) >> 2) & 0x3FF);
+  uint16_t data = ((Gpio::get_adc(pin) >> 2) & 0x3FF);
   return data;    // return 10bit value as Marlin expects
 }
 
@@ -73,6 +78,4 @@ void HAL_pwm_init() {
 
 }
 
-void HAL_reboot() { /* Reset the application state and GPIO */ }
-
-#endif // __PLAT_LINUX__
+#endif // __PLAT_LINUX_REALTIME__
