@@ -73,10 +73,10 @@
 // hg42: currently not used, but was used by pinsDebug
 
 /// check if pin is an input
-#define _IS_INPUT(IO)         (LPC1768_PIN_PIN(IO) >= 0)
+#define _IS_INPUT(IO)         (IO >= 0)
 
 /// check if pin is an output
-#define _IS_OUTPUT(IO)        (LPC1768_PIN_PIN(IO) >= 0)
+#define _IS_OUTPUT(IO)        (IO >= 0)
 
 /// Read a pin wrapper
 #define READ(IO)             _READ(IO)

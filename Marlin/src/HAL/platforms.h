@@ -41,7 +41,7 @@
   #define HAL_PATH(PATH, NAME) XSTR(PATH/STM32/NAME)
 #elif defined(ARDUINO_ARCH_ESP32)
   #define HAL_PATH(PATH, NAME) XSTR(PATH/ESP32/NAME)
-#elif defined(__PLAT_LINUX__)
+#elif defined(__PLAT_LINUX_REALTIME__)
   #define HAL_PATH(PATH, NAME) XSTR(PATH/LINUX/NAME)
 #elif defined(__SAMD51__)
   #define HAL_PATH(PATH, NAME) XSTR(PATH/SAMD51/NAME)

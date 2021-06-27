@@ -19,14 +19,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-#ifdef __PLAT_LINUX__
+#ifdef __PLAT_LINUX_REALTIME__
 
 #include <pinmapping.h>
 
-#include "../../../gcode/parser.h"
+#include <src/gcode/parser.h>
 
 int16_t PARSED_PIN_INDEX(const char code, const int16_t dval) {
   return parser.intval(code, dval);
 }
 
-#endif // __PLAT_LINUX__
+#endif // __PLAT_LINUX_REALTIME__

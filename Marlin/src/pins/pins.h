@@ -679,7 +679,7 @@
 //
 
 #elif MB(LINUX_RAMPS)
-  #include "linux/pins_RAMPS_LINUX.h"           // Linux                                  env:linux_native
+  #include "linux/pins_RAMPS_LINUX.h"           // Linux                                  env:linux_realtime
 
 #else
 
