@@ -302,6 +302,10 @@ void serial_echopair_PGM(PGM_P const s_P, double v);
 void serial_echopair_PGM(PGM_P const s_P, unsigned char v);
 void serial_echopair_PGM(PGM_P const s_P, unsigned int v);
 void serial_echopair_PGM(PGM_P const s_P, unsigned long v);
+#if __LONG_WIDTH__ != __LONG_LONG_WIDTH__
+  inline void serial_echopair_PGM(PGM_P const s_P, unsigned long long v) { serialprintPGM(s_P);  serialprintPGM("unsupported type"); }
+#endif
+
 inline void serial_echopair_PGM(PGM_P const s_P, bool v)    { serial_echopair_PGM(s_P, (int)v); }
 inline void serial_echopair_PGM(PGM_P const s_P, void *v)   { serial_echopair_PGM(s_P, (uintptr_t)v); }
 #if __INTPTR_WIDTH__ != __SIZE_WIDTH__
