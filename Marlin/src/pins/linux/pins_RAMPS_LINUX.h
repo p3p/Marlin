@@ -687,5 +687,6 @@
     #define BTN_BACK                          70
 
   #endif // IS_NEWPANEL
-
 #endif // HAS_WIRED_LCD
+
+#define SD_DETECT_PIN                   42

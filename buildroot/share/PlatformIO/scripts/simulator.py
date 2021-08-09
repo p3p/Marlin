@@ -19,6 +19,7 @@ env['PROGNAME'] = "MarlinSimulator"
 #
 
 import sys
+import subprocess
 if sys.platform == 'darwin':
 
   #
@@ -48,5 +49,15 @@ if sys.platform == 'darwin':
 
     # Break out of the PIO build immediately
     sys.exit(1)
+  try:
+    env['BUILD_FLAGS'] += [subprocess.run(['sdl2-config', '--cflags'], stdout=subprocess.PIPE).stdout.decode('utf-8')]
+  except:
+    print("'sdl2-config' not in PATH")
+
+elif sys.platform == 'linux':
+  try:
+    env['BUILD_FLAGS'] += [subprocess.run(['sdl2-config', '--cflags'], stdout=subprocess.PIPE).stdout.decode('utf-8')]
+  except:
+    print("'sdl2-config' not in PATH")
 
 env.AddCustomTarget("upload", "$BUILD_DIR/${PROGNAME}", "$BUILD_DIR/${PROGNAME}")
