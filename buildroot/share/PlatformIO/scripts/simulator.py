@@ -49,14 +49,25 @@ if sys.platform == 'darwin':
 
     # Break out of the PIO build immediately
     sys.exit(1)
-  try:
-    env['BUILD_FLAGS'] += [subprocess.run(['sdl2-config', '--cflags'], stdout=subprocess.PIPE).stdout.decode('utf-8')]
-  except:
-    print("'sdl2-config' not in PATH")
 
 elif sys.platform == 'linux':
   try:
-    env['BUILD_FLAGS'] += [subprocess.run(['sdl2-config', '--cflags'], stdout=subprocess.PIPE).stdout.decode('utf-8')]
+    env['BUILD_FLAGS'] += [subprocess.run(['sdl2-config', '--cflags'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()]
+  except:
+    print("'sdl2-config' not in PATH")
+
+elif sys.platform == 'win32':
+  import os
+  prefix = "C:\\"
+  for path in os.environ['PATH'].split(';'):
+    if 'msys64' in path:
+      prefix = path.split('msys64')[0]
+  bash_exe = os.path.join(prefix, 'msys64\\usr\\bin\\bash.exe')
+  new_env = os.environ.copy()
+  new_env['PATH'] += os.path.join(prefix, 'msys64\\usr\\bin')
+  try:
+    current_sdl_prefix = subprocess.run([bash_exe, 'sdl2-config', '--prefix'], stdout=subprocess.PIPE, env=new_env).stdout.decode('utf-8').strip()
+    env['BUILD_FLAGS'] += [os.path.normpath(subprocess.run([bash_exe, 'sdl2-config', '--prefix={}{}'.format(os.path.join(prefix, "msys64"), current_sdl_prefix),'--cflags'], stdout=subprocess.PIPE, env=new_env).stdout.decode('utf-8').strip()).replace('\\', '\\\\')]
   except:
     print("'sdl2-config' not in PATH")
 
