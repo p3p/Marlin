@@ -95,53 +95,53 @@
 //
 // Steppers
 //
-#define X_STEP_PIN                            54
-#define X_DIR_PIN                             55
-#define X_ENABLE_PIN                          38
+#define X_STEP_PIN                            1
+#define X_DIR_PIN                             2
+#define X_ENABLE_PIN                          3
 #ifndef X_CS_PIN
-  #define X_CS_PIN                            53
+  #define X_CS_PIN                            4
 #endif
 
-#define Y_STEP_PIN                            60
-#define Y_DIR_PIN                             61
-#define Y_ENABLE_PIN                          56
+#define Y_STEP_PIN                            5
+#define Y_DIR_PIN                             6
+#define Y_ENABLE_PIN                          7
 #ifndef Y_CS_PIN
-  #define Y_CS_PIN                            49
+  #define Y_CS_PIN                            8
 #endif
 
-#define Z_STEP_PIN                            46
-#define Z_DIR_PIN                             48
-#define Z_ENABLE_PIN                          62
+#define Z_STEP_PIN                            9
+#define Z_DIR_PIN                             10
+#define Z_ENABLE_PIN                          11
 #ifndef Z_CS_PIN
-  #define Z_CS_PIN                            40
+  #define Z_CS_PIN                            12
 #endif
 
-#define E0_STEP_PIN                           26
-#define E0_DIR_PIN                            28
-#define E0_ENABLE_PIN                         24
+#define E0_STEP_PIN                           13
+#define E0_DIR_PIN                            14
+#define E0_ENABLE_PIN                         15
 #ifndef E0_CS_PIN
-  #define E0_CS_PIN                           42
+  #define E0_CS_PIN                           16
 #endif
 
-#define E1_STEP_PIN                           36
-#define E1_DIR_PIN                            34
-#define E1_ENABLE_PIN                         30
-#ifndef E1_CS_PIN
-  #define E1_CS_PIN                           44
-#endif
+//#define E1_STEP_PIN                           36
+//#define E1_DIR_PIN                            34
+//#define E1_ENABLE_PIN                         30
+//#ifndef E1_CS_PIN
+// #define E1_CS_PIN                           44
+//#endif
 
 //
 // Temperature Sensors
 //
-#define TEMP_0_PIN                             0  // Analog Input
-#define TEMP_1_PIN                             1  // Analog Input
-#define TEMP_BED_PIN                           2  // Analog Input
+#define TEMP_0_PIN                             A1  // Analog Input
+#define TEMP_1_PIN                             A2  // Analog Input
+#define TEMP_BED_PIN                           A3  // Analog Input
 
 // SPI for MAX Thermocouple
 #if DISABLED(SDSUPPORT)
-  #define TEMP_0_CS_PIN                       66  // Don't use 53 if using Display/SD card
+  #define TEMP_0_CS_PIN                       A4  // Don't use 53 if using Display/SD card
 #else
-  #define TEMP_0_CS_PIN                       66  // Don't use 49 (SD_DETECT_PIN)
+  #define TEMP_0_CS_PIN                       17  // Don't use 49 (SD_DETECT_PIN)
 #endif
 
 //
@@ -210,9 +210,9 @@
 //
 // Misc. Functions
 //
-#define SDSS                                  53
-#define LED_PIN                               13
-#define NEOPIXEL_PIN                          71
+#define SDSS                                  20
+//#define LED_PIN                               13
+#define NEOPIXEL_PIN                          18
 
 #ifndef FILWIDTH_PIN
   #define FILWIDTH_PIN                         5  // Analog Input on AUX2
@@ -231,7 +231,7 @@
   #if NUM_SERVOS <= 1                             // Prefer the servo connector
     #define CASE_LIGHT_PIN                     6  // Hardware PWM
   #elif HAS_FREE_AUX2_PINS                        // try to use AUX 2
-    #define CASE_LIGHT_PIN                    44  // Hardware PWM
+    #define CASE_LIGHT_PIN                    21  // Hardware PWM
   #endif
 #endif
 
@@ -244,9 +244,9 @@
     #define SPINDLE_LASER_PWM_PIN              6  // Hardware PWM
     #define SPINDLE_DIR_PIN                    5
   #elif HAS_FREE_AUX2_PINS                        // try to use AUX 2
-    #define SPINDLE_LASER_ENA_PIN             40  // Pullup or pulldown!
-    #define SPINDLE_LASER_PWM_PIN             44  // Hardware PWM
-    #define SPINDLE_DIR_PIN                   65
+    #define SPINDLE_LASER_ENA_PIN             22  // Pullup or pulldown!
+    #define SPINDLE_LASER_PWM_PIN             23  // Hardware PWM
+    #define SPINDLE_DIR_PIN                   24
   #endif
 #endif
 
@@ -305,7 +305,7 @@
     #define X_SERIAL_TX_PIN                   40
   #endif
   #ifndef X_SERIAL_RX_PIN
-    #define X_SERIAL_RX_PIN                   63
+    #define X_SERIAL_RX_PIN                   -1
   #endif
   #ifndef X2_SERIAL_TX_PIN
     #define X2_SERIAL_TX_PIN                  -1
@@ -407,7 +407,7 @@
   #define BTN_EN1                             40
   #define BTN_EN2                             63
   #define BTN_ENC                             59
-  #define BEEPER_PIN                          42
+  #define BEEPER_PIN                          22
 
   #define TOUCH_CS_PIN                        33
   #define SD_DETECT_PIN                       41

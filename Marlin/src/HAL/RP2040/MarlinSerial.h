@@ -39,9 +39,9 @@ extern USBSerialType USBSerial;
 #define MSERIAL(X) _MSERIAL(X)
 
 #if SERIAL_PORT == -1
-  #define MYSERIAL1 USBSerial
+ // #define MYSERIAL1 USBSerial this is already done in the HAL
 #elif WITHIN(SERIAL_PORT, 0, 3)
-  #define MYSERIAL1 MSERIAL(SERIAL_PORT)
+ #define MYSERIAL1 MSERIAL(SERIAL_PORT)
   DECLARE_SERIAL(SERIAL_PORT);
 #else
   #error "SERIAL_PORT must be from 0 to 3, or -1 for Native USB."

@@ -22,7 +22,7 @@
 #pragma once
 
 #include <stdint.h>
-
+/*
 typedef enum {
   USB_STATE_INIT,
   USB_STATE_ERROR,
@@ -58,3 +58,4 @@ public:
 
 extern USBHost usb;
 extern BulkStorage bulk;
+*/

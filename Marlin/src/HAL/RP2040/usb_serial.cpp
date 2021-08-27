@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-#include "../platforms.h"
+/*#include "../platforms.h"
 
 #ifdef __PLAT_RP2040__
 
@@ -54,3 +54,4 @@ void USB_Hook_init() {
 
 #endif // EMERGENCY_PARSER && USBD_USE_CDC
 #endif // __PLAT_RP2040__
+*/

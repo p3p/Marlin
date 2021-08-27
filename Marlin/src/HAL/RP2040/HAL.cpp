@@ -25,10 +25,16 @@
 #ifdef __PLAT_RP2040__
 
 #include "HAL.h"
-#include "usb_serial.h"
+//#include "usb_serial.h"
 
 #include "../../inc/MarlinConfig.h"
 #include "../shared/Delay.h"
+
+extern "C"
+{
+  #include "pico/bootrom.h"
+}
+
 
 #ifdef USBCON
   DefaultSerial1 MSerial0(false, SerialUSB);
@@ -117,7 +123,7 @@ uint8_t HAL_get_reset_source() { //todo: implement
   return 0;
 }
 
-void HAL_reboot() { NVIC_SystemReset(); }
+void HAL_reboot() { reset_usb_boot(0, 0);}
 
 void _delay_ms(const int delay_ms) { delay(delay_ms); }
 
