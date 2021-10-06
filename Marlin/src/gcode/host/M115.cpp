@@ -79,6 +79,9 @@ void GcodeSuite::M115() {
     // BINARY_FILE_TRANSFER (M28 B1)
     cap_line(F("BINARY_FILE_TRANSFER"), ENABLED(BINARY_FILE_TRANSFER)); // TODO: Use SERIAL_IMPL.has_feature(port, SerialFeature::BinaryFileTransfer) once implemented
 
+    // Serial Packet Stream Transport protocol
+    cap_line(F("SERIALPACKETSTREAM"), SERIAL_IMPL.has_feature(port, SerialFeature::SerialPacketStream));
+
     // EEPROM (M500, M501)
     cap_line(F("EEPROM"), ENABLED(EEPROM_SETTINGS));
 

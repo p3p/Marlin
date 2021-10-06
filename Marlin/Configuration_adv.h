@@ -4211,3 +4211,10 @@
  */
 //#define SOFT_RESET_VIA_SERIAL         // 'KILL' and '^X' commands will soft-reset the controller
 //#define SOFT_RESET_ON_KILL            // Use a digital button to soft-reset the controller after KILL
+
+#define SERIALPACKETSTREAM
+#if ENABLED(SERIALPACKETSTREAM)
+  #define SERIALPACKETSTREAM_ON_SERIAL_PORT_1
+//  #define SERIALPACKETSTREAM_ON_SERIAL_PORT_2
+//  #define SERIALPACKETSTREAM_ON_SERIAL_PORT_3
+#endif

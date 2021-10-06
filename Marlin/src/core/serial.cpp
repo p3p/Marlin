@@ -41,6 +41,11 @@ PGMSTR(I_LBL, AXIS4_STR ":"); PGMSTR(J_LBL, AXIS5_STR ":"); PGMSTR(K_LBL, AXIS6_
 PGMSTR(SP_I_STR, " " AXIS4_STR);     PGMSTR(SP_J_STR, " " AXIS5_STR);     PGMSTR(SP_K_STR, " " AXIS6_STR);
 PGMSTR(SP_I_LBL, " " AXIS4_STR ":"); PGMSTR(SP_J_LBL, " " AXIS5_STR ":"); PGMSTR(SP_K_LBL, " " AXIS6_STR ":");
 
+// Hook the SerialPacketStream preprocessor
+#if ENABLED(SERIALPACKETSTREAM_ON_SERIAL_PORT_1)
+  SerialLeafSPS1 spsSerial1(false, _SERIAL_SOURCE_1);
+#endif
+
 // Hook Meatpack if it's enabled on the first leaf
 #if ENABLED(MEATPACK_ON_SERIAL_PORT_1)
   SerialLeafT1 mpSerial1(false, _SERIAL_LEAF_1);

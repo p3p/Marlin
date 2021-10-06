@@ -754,6 +754,10 @@ void idle(bool no_stepper_sleep/*=false*/) {
     if (++idle_depth > 5) SERIAL_ECHOLNPGM("idle() call depth: ", idle_depth);
   #endif
 
+  #if ENABLED(SERIALPACKETSTREAM_ON_SERIAL_PORT_1)
+     _SERIAL_LEAF_1.process();
+  #endif
+
   // Core Marlin activities
   manage_inactivity(no_stepper_sleep);
 

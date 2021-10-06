@@ -28,6 +28,10 @@
   #include "../feature/meatpack.h"
 #endif
 
+#if HAS_SERIALPACKETSTREAM
+  #include "../feature/serial_packet_stream.h"
+#endif
+
 // Commonly-used strings in serial output
 extern const char NUL_STR[],
                   SP_X_STR[], SP_Y_STR[], SP_Z_STR[],
@@ -69,9 +73,18 @@ extern uint8_t marlin_debug_flags;
 //
 // Step 1: Find out what the first serial leaf is
 #if HAS_MULTI_SERIAL && defined(SERIAL_CATCHALL)
-  #define _SERIAL_LEAF_1 MYSERIAL
+  #define _SERIAL_SOURCE_1 MYSERIAL
 #else
-  #define _SERIAL_LEAF_1 MYSERIAL1
+  #define _SERIAL_SOURCE_1 MYSERIAL1
+#endif
+
+// Hook SerialPacketStream if it's enabled onto the data source
+#if ENABLED(SERIALPACKETSTREAM_ON_SERIAL_PORT_1)
+  typedef SerialPacketStreamSerial<decltype(_SERIAL_SOURCE_1)> SerialLeafSPS1;
+  extern SerialLeafSPS1 spsSerial1;
+  #define _SERIAL_LEAF_1 spsSerial1
+#else
+  #define _SERIAL_LEAF_1 _SERIAL_SOURCE_1
 #endif
 
 // Hook Meatpack if it's enabled on the first leaf

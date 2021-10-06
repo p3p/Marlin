@@ -116,6 +116,8 @@ struct ForwardSerial : public SerialBase< ForwardSerial<SerialT> > {
 
   SerialT & out;
   NO_INLINE size_t write(uint8_t c) { return out.write(c); }
+  NO_INLINE size_t write(const char* buffer, size_t length) { return out.write(buffer, length); }
+
   void flush()            { out.flush();  }
   void begin(long br)     { out.begin(br); }
   void end()              { out.end(); }
@@ -127,8 +129,12 @@ struct ForwardSerial : public SerialBase< ForwardSerial<SerialT> > {
 
   int available(serial_index_t) { return (int)out.available(); }
   int read(serial_index_t)      { return (int)out.read(); }
+  int readBytes(serial_index_t, char * buffer, size_t length) { return (int)out.readBytes(buffer, length); }
+
   int available()               { return (int)out.available(); }
   int read()                    { return (int)out.read(); }
+  int readBytes(char * buffer, size_t length) { return (int)out.readBytes(buffer, length); }
+
   SerialFeature features(serial_index_t index) const  { return CALL_IF_EXISTS(SerialFeature, &out, features, index);  }
 
   ForwardSerial(const bool e, SerialT & out) : BaseClassT(e), out(out) {}

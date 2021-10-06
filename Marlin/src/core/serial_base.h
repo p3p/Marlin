@@ -59,7 +59,7 @@ enum class PrintBase {
 enum class SerialFeature {
   None                = 0x00,
   MeatPack            = 0x01,   //!< Enabled when Meatpack is present
-  BinaryFileTransfer  = 0x02,   //!< Enabled for BinaryFile transfer support (in the future)
+  SerialPacketStream  = 0x02,   //!< Enabled for BinaryFile transfer support (in the future)
   Virtual             = 0x04,   //!< Enabled for virtual serial port (like Telnet / Websocket / ...)
   Hookable            = 0x08,   //!< Enabled if the serial class supports a setHook method
 };
