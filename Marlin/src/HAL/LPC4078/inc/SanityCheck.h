@@ -31,7 +31,7 @@
 /**
  * Detect an old pins file by checking for old ADC pins values.
  */
-#define _OLD_TEMP_PIN(P) PIN_EXISTS(P) && _CAT(P,_PIN) <= 7 && !WITHIN(_CAT(P,_PIN), TERN(LPC1768_IS_SKRV1_3, 0, 2), 3)  // Include PIN0_00 and PIN0_01 for SKR V1.3 board
+#define _OLD_TEMP_PIN(P) PIN_EXISTS(P) && _CAT(P,_PIN) <= 7 && !WITHIN(_CAT(P,_PIN), TERN(LPC1768_IS_SKRV1_3, 0, 2), 3)  // Include P0_00 and P0_01 for SKR V1.3 board
 #if _OLD_TEMP_PIN(TEMP_BED)
   #error "TEMP_BED_PIN must be defined using the Pn_nn or Pn_nn_An format. (See the included pins files)."
 #elif _OLD_TEMP_PIN(TEMP_0)
@@ -84,17 +84,17 @@ static_assert(DISABLED(BAUD_RATE_GCODE), "BAUD_RATE_GCODE is not yet supported o
  *
  *   Port  |  TX   |  RX   |
  *    ---  |  ---  |  ---  |
- * Serial  | PIN0_02 | PIN0_03 |
- * Serial1 | PIN0_15 | PIN0_16 |
- * Serial2 | PIN0_10 | PIN0_11 |
- * Serial3 | PIN0_00 | PIN0_01 |
+ * Serial  | P0_02 | P0_03 |
+ * Serial1 | P0_15 | P0_16 |
+ * Serial2 | P0_10 | P0_11 |
+ * Serial3 | P0_00 | P0_01 |
  */
 #define ANY_TX(N,V...) DO(IS_TX##N,||,V)
 #define ANY_RX(N,V...) DO(IS_RX##N,||,V)
 
 #if USING_HW_SERIAL0
-  #define IS_TX0(P) (P == PIN0_02)
-  #define IS_RX0(P) (P == PIN0_03)
+  #define IS_TX0(P) (P == P0_02)
+  #define IS_RX0(P) (P == P0_03)
   #if IS_TX0(TMC_SW_MISO) || IS_RX0(TMC_SW_MOSI)
     #error "Serial port pins (0) conflict with Trinamic SPI pins!"
   #elif HAS_PRUSA_MMU1 && (IS_TX0(E_MUX1_PIN) || IS_RX0(E_MUX0_PIN))
@@ -107,8 +107,8 @@ static_assert(DISABLED(BAUD_RATE_GCODE), "BAUD_RATE_GCODE is not yet supported o
 #endif
 
 #if USING_HW_SERIAL1
-  #define IS_TX1(P) (P == PIN0_15)
-  #define IS_RX1(P) (P == PIN0_16)
+  #define IS_TX1(P) (P == P0_15)
+  #define IS_RX1(P) (P == P0_16)
   #define _IS_TX1_1 IS_TX1
   #define _IS_RX1_1 IS_RX1
   #if IS_TX1(TMC_SW_SCK)
@@ -128,8 +128,8 @@ static_assert(DISABLED(BAUD_RATE_GCODE), "BAUD_RATE_GCODE is not yet supported o
 #endif
 
 #if USING_HW_SERIAL2
-  #define IS_TX2(P) (P == PIN0_10)
-  #define IS_RX2(P) (P == PIN0_11)
+  #define IS_TX2(P) (P == P0_10)
+  #define IS_RX2(P) (P == P0_11)
   #define _IS_TX2_1 IS_TX2
   #define _IS_RX2_1 IS_RX2
   #if IS_TX2(X2_ENABLE_PIN) || ANY_RX(2, X2_DIR_PIN, X2_STEP_PIN) || (AXIS_HAS_SPI(X2) && IS_TX2(X2_CS_PIN))
@@ -162,8 +162,8 @@ static_assert(DISABLED(BAUD_RATE_GCODE), "BAUD_RATE_GCODE is not yet supported o
 #endif
 
 #if USING_HW_SERIAL3
-  #define PIN_IS_TX3(P) (PIN_EXISTS(P) && P##_PIN == PIN0_00)
-  #define PIN_IS_RX3(P) (P##_PIN == PIN0_01)
+  #define PIN_IS_TX3(P) (PIN_EXISTS(P) && P##_PIN == P0_00)
+  #define PIN_IS_RX3(P) (P##_PIN == P0_01)
   #if PIN_IS_TX3(X_MIN) || PIN_IS_RX3(X_MAX)
     #error "Serial port pins (3) conflict with X endstop pins!"
   #elif PIN_IS_TX3(Y_SERIAL_TX) || PIN_IS_TX3(Y_SERIAL_RX) || PIN_IS_RX3(X_SERIAL_TX) || PIN_IS_RX3(X_SERIAL_RX)
@@ -194,9 +194,9 @@ static_assert(DISABLED(BAUD_RATE_GCODE), "BAUD_RATE_GCODE is not yet supported o
 #if ANY(HAS_MOTOR_CURRENT_I2C, HAS_MOTOR_CURRENT_DAC, EXPERIMENTAL_I2CBUS, I2C_POSITION_ENCODERS, PCA9632, I2C_EEPROM)
   #define USEDI2CDEV_M 1  // <Arduino>/Wire.cpp
 
-  #if USEDI2CDEV_M == 0         // PIN0_27 [D57] (AUX-1) .......... PIN0_28 [D58] (AUX-1)
-    #define PIN_IS_SDA0(P) (P##_PIN == PIN0_27)
-    #define IS_SCL0(P)     (P == PIN0_28)
+  #if USEDI2CDEV_M == 0         // P0_27 [D57] (AUX-1) .......... P0_28 [D58] (AUX-1)
+    #define PIN_IS_SDA0(P) (P##_PIN == P0_27)
+    #define IS_SCL0(P)     (P == P0_28)
     #if ENABLED(SDSUPPORT) && PIN_IS_SDA0(SD_DETECT)
       #error "SDA0 overlaps with SD_DETECT_PIN!"
     #elif PIN_IS_SDA0(E0_AUTO_FAN)
@@ -212,9 +212,9 @@ static_assert(DISABLED(BAUD_RATE_GCODE), "BAUD_RATE_GCODE is not yet supported o
     #endif
     #undef PIN_IS_SDA0
     #undef IS_SCL0
-  #elif USEDI2CDEV_M == 1       // PIN0_00 [D20] (SCA) ............ PIN0_01 [D21] (SCL)
-    #define PIN_IS_SDA1(P) (PIN_EXISTS(P) && P##_PIN == PIN0_00)
-    #define PIN_IS_SCL1(P) (P##_PIN == PIN0_01)
+  #elif USEDI2CDEV_M == 1       // P0_00 [D20] (SCA) ............ P0_01 [D21] (SCL)
+    #define PIN_IS_SDA1(P) (PIN_EXISTS(P) && P##_PIN == P0_00)
+    #define PIN_IS_SCL1(P) (P##_PIN == P0_01)
     #if PIN_IS_SDA1(X_MIN) || PIN_IS_SCL1(X_MAX)
       #error "One or more i2c (1) pins overlaps with X endstop pins! Disable i2c peripherals."
     #elif PIN_IS_SDA1(X2_DIR) || PIN_IS_SCL1(X2_STEP)
@@ -232,9 +232,9 @@ static_assert(DISABLED(BAUD_RATE_GCODE), "BAUD_RATE_GCODE is not yet supported o
     #endif
     #undef PIN_IS_SDA1
     #undef PIN_IS_SCL1
-  #elif USEDI2CDEV_M == 2     // PIN0_10 [D38] (X_ENABLE_PIN) ... PIN0_11 [D55] (X_DIR_PIN)
-    #define PIN_IS_SDA2(P) (P##_PIN == PIN0_10)
-    #define PIN_IS_SCL2(P) (P##_PIN == PIN0_11)
+  #elif USEDI2CDEV_M == 2     // P0_10 [D38] (X_ENABLE_PIN) ... P0_11 [D55] (X_DIR_PIN)
+    #define PIN_IS_SDA2(P) (P##_PIN == P0_10)
+    #define PIN_IS_SCL2(P) (P##_PIN == P0_11)
     #if PIN_IS_SDA2(Y_STOP)
       #error "i2c SDA2 overlaps with Y endstop pin!"
     #elif USES_Z_MIN_PROBE_PIN && PIN_IS_SDA2(Z_MIN_PROBE)

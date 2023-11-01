@@ -53,141 +53,141 @@
   #define DEFAULT_MACHINE_NAME "TEST EBAB"
 #endif
 
-#define LED_PIN                                PIN3_18 // PWM0_3
+#define LED_PIN                                P3_18 // PWM0_3
 
 //
 // Servos
 //
-#define SERVO0_PIN                             PIN2_05 // PWM1_6
-#define SERVO1_PIN                             PIN2_04 // PWM1_5
-#define SERVO2_PIN                             PIN2_03 // PWM1_4
-#define SERVO3_PIN                             PIN2_02 // PWM1_3
+#define SERVO0_PIN                             P2_05 // PWM1_6
+#define SERVO1_PIN                             P2_04 // PWM1_5
+#define SERVO2_PIN                             P2_03 // PWM1_4
+#define SERVO3_PIN                             P2_02 // PWM1_3
 
 
 //
 // Limit Switches
 //
-#define X_MIN_PIN                              PIN0_19
-#define X_MAX_PIN                              PIN0_18
-#define Y_MIN_PIN                              PIN0_20
-#define Y_MAX_PIN                              PIN0_17
-#define Z_MIN_PIN                              PIN0_21
-#define Z_MAX_PIN                              PIN0_15
+#define X_MIN_PIN                              P0_19
+#define X_MAX_PIN                              P0_18
+#define Y_MIN_PIN                              P0_20
+#define Y_MAX_PIN                              P0_17
+#define Z_MIN_PIN                              P0_21
+#define Z_MAX_PIN                              P0_15
 
 //
 // Z Probe (when not Z_MIN_PIN)
 //
 #ifndef Z_MIN_PROBE_PIN
-  #define Z_MIN_PROBE_PIN                     PIN0_21
+  #define Z_MIN_PROBE_PIN                     P0_21
 #endif
 
 //
 // Steppers
 //
-#define X_STEP_PIN                            PIN0_10
-#define X_DIR_PIN                             PIN4_03
-#define X_ENABLE_PIN                          PIN0_01
-#define X_CS_PIN                              PIN0_00
-#define X_DIAG_PIN                            PIN2_17
+#define X_STEP_PIN                            P0_10
+#define X_DIR_PIN                             P4_03
+#define X_ENABLE_PIN                          P0_01
+#define X_CS_PIN                              P0_00
+#define X_DIAG_PIN                            P2_17
 
-#define Y_STEP_PIN                            PIN1_29
-#define Y_DIR_PIN                             PIN2_14
-#define Y_ENABLE_PIN                          PIN1_28
-#define Y_CS_PIN                              PIN2_22
-#define Y_DIAG_PIN                            PIN2_16
+#define Y_STEP_PIN                            P1_29
+#define Y_DIR_PIN                             P2_14
+#define Y_ENABLE_PIN                          P1_28
+#define Y_CS_PIN                              P2_22
+#define Y_DIAG_PIN                            P2_16
 
-#define Z_STEP_PIN                            PIN4_02
-#define Z_DIR_PIN                             PIN1_26
-#define Z_ENABLE_PIN                          PIN1_25
-#define Z_CS_PIN                              PIN4_01
-#define Z_DIAG_PIN                            PIN2_21
+#define Z_STEP_PIN                            P4_02
+#define Z_DIR_PIN                             P1_26
+#define Z_ENABLE_PIN                          P1_25
+#define Z_CS_PIN                              P4_01
+#define Z_DIAG_PIN                            P2_21
 
-#define E0_STEP_PIN                           PIN1_19
-#define E0_DIR_PIN                            PIN0_14
-#define E0_ENABLE_PIN                         PIN1_22
-#define E0_CS_PIN                             PIN4_00
-#define E0_DIAG_PIN                           PIN2_20
+#define E0_STEP_PIN                           P1_19
+#define E0_DIR_PIN                            P0_14
+#define E0_ENABLE_PIN                         P1_22
+#define E0_CS_PIN                             P4_00
+#define E0_DIAG_PIN                           P2_20
 
-#define E1_STEP_PIN                           PIN2_23
-#define E1_DIR_PIN                            PIN2_18
-#define E1_ENABLE_PIN                         PIN3_23
-#define E1_CS_PIN                             PIN1_18
-#define E1_DIAG_PIN                           PIN2_19
+#define E1_STEP_PIN                           P2_23
+#define E1_DIR_PIN                            P2_18
+#define E1_ENABLE_PIN                         P3_23
+#define E1_CS_PIN                             P1_18
+#define E1_DIAG_PIN                           P2_19
 
-#define E2_STEP_PIN                           PIN3_26
-#define E2_DIR_PIN                            PIN2_25
-#define E2_ENABLE_PIN                         PIN3_25
-#define E2_CS_PIN                             PIN3_24
-#define E2_DIAG_PIN                           PIN2_26
+#define E2_STEP_PIN                           P3_26
+#define E2_DIR_PIN                            P2_25
+#define E2_ENABLE_PIN                         P3_25
+#define E2_CS_PIN                             P3_24
+#define E2_DIAG_PIN                           P2_26
 
-#define E3_STEP_PIN                           PIN4_19
-#define E3_DIR_PIN                            PIN4_20
-#define E3_ENABLE_PIN                         PIN4_26
-#define E3_CS_PIN                             PIN4_21
-#define E3_DIAG_PIN                           PIN0_22
+#define E3_STEP_PIN                           P4_19
+#define E3_DIR_PIN                            P4_20
+#define E3_ENABLE_PIN                         P4_26
+#define E3_CS_PIN                             P4_21
+#define E3_DIAG_PIN                           P0_22
 
-#define E4_STEP_PIN                           PIN4_17
-#define E4_DIR_PIN                            PIN4_18
-#define E4_ENABLE_PIN                         PIN4_05
-#define E4_CS_PIN                             PIN2_12
-#define E4_DIAG_PIN                           PIN2_11
+#define E4_STEP_PIN                           P4_17
+#define E4_DIR_PIN                            P4_18
+#define E4_ENABLE_PIN                         P4_05
+#define E4_CS_PIN                             P2_12
+#define E4_DIAG_PIN                           P2_11
 
-#define E5_STEP_PIN                           PIN0_11
-#define E5_DIR_PIN                            PIN2_15
-#define E5_ENABLE_PIN                         PIN4_04
-#define E5_CS_PIN                             PIN4_16
-#define E5_DIAG_PIN                           PIN2_13
+#define E5_STEP_PIN                           P0_11
+#define E5_DIR_PIN                            P2_15
+#define E5_ENABLE_PIN                         P4_04
+#define E5_CS_PIN                             P4_16
+#define E5_DIAG_PIN                           P2_13
 
-#define E6_STEP_PIN                           PIN2_28
-#define E6_DIR_PIN                            PIN0_28
-#define E6_ENABLE_PIN                         PIN0_31
-#define E6_CS_PIN                             PIN0_27
-#define E6_DIAG_PIN                           PIN2_24
+#define E6_STEP_PIN                           P2_28
+#define E6_DIR_PIN                            P0_28
+#define E6_ENABLE_PIN                         P0_31
+#define E6_CS_PIN                             P0_27
+#define E6_DIAG_PIN                           P2_24
 
-#define E7_STEP_PIN                           PIN1_30
-#define E7_DIR_PIN                            PIN0_12
-#define E7_ENABLE_PIN                         PIN0_13
-#define E7_CS_PIN                             PIN2_29
-#define E7_DIAG_PIN                           PIN2_27
+#define E7_STEP_PIN                           P1_30
+#define E7_DIR_PIN                            P0_12
+#define E7_ENABLE_PIN                         P0_13
+#define E7_CS_PIN                             P2_29
+#define E7_DIAG_PIN                           P2_27
 
-#define E8_STEP_PIN                           PIN3_15
-#define E8_DIR_PIN                            PIN3_07
-#define E8_ENABLE_PIN                         PIN2_30
-#define E8_CS_PIN                             PIN5_01
-#define E8_DIAG_PIN                           PIN2_31
+#define E8_STEP_PIN                           P3_15
+#define E8_DIR_PIN                            P3_07
+#define E8_ENABLE_PIN                         P2_30
+#define E8_CS_PIN                             P5_01
+#define E8_DIAG_PIN                           P2_31
 
 //
 // Temperature Sensors
 //
-#define TEMP_0_PIN                            PIN0_23
-#define TEMP_1_PIN                            PIN0_24
-#define TEMP_2_PIN                            PIN0_25
-#define TEMP_3_PIN                            PIN0_26
-#define TEMP_BED_PIN                          PIN1_31
+#define TEMP_0_PIN                            P0_23
+#define TEMP_1_PIN                            P0_24
+#define TEMP_2_PIN                            P0_25
+#define TEMP_3_PIN                            P0_26
+#define TEMP_BED_PIN                          P1_31
 
 //
 // Heaters / Fans
 //
 
-#define HEATER_0_PIN                          PIN1_02
-#define HEATER_1_PIN                          PIN1_10
-#define HEATER_2_PIN                          PIN4_30
-#define HEATER_3_PIN                          PIN1_09
-#define HEATER_BED_PIN                        PIN4_23
+#define HEATER_0_PIN                          P1_02
+#define HEATER_1_PIN                          P1_10
+#define HEATER_2_PIN                          P4_30
+#define HEATER_3_PIN                          P1_09
+#define HEATER_BED_PIN                        P4_23
 
-#define FAN0_PIN                              PIN3_08
-#define FAN1_PIN                              PIN3_00
-#define FAN2_PIN                              PIN3_27 //PWM1_4
-#define FAN3_PIN                              PIN5_04
+#define FAN0_PIN                              P3_08
+#define FAN1_PIN                              P3_00
+#define FAN2_PIN                              P3_27 //PWM1_4
+#define FAN3_PIN                              P5_04
 
-#define EFAN0_PIN                             PIN1_08
-#define EFAN1_PIN                             PIN4_31
-#define EFAN2_PIN                             PIN3_01
-#define EFAN3_PIN                             PIN3_10
+#define EFAN0_PIN                             P1_08
+#define EFAN1_PIN                             P4_31
+#define EFAN2_PIN                             P3_01
+#define EFAN3_PIN                             P3_10
 //
 // Misc. Functions
 //
-#define SDSS                                  PIN0_06
+#define SDSS                                  P0_06
 
 #ifndef NEOPIXEL_PIN
   #define NEOPIXEL_PIN                        P_NC
@@ -225,13 +225,13 @@
  */
 #if ENABLED(TMC_USE_SW_SPI)
   #ifndef TMC_SW_MOSI
-    #define TMC_SW_MOSI                       PIN1_24
+    #define TMC_SW_MOSI                       P1_24
   #endif
   #ifndef TMC_SW_MISO
-    #define TMC_SW_MISO                       PIN1_23
+    #define TMC_SW_MISO                       P1_23
   #endif
   #ifndef TMC_SW_SCK
-    #define TMC_SW_SCK                        PIN1_20
+    #define TMC_SW_SCK                        P1_20
   #endif
 #endif
 
@@ -338,9 +338,9 @@
   //
   #if ENABLED(REPRAPWORLD_GRAPHICAL_LCD)
 
-    #define LCD_PINS_RS                       PIN3_06  // CS chip select /SS chip slave select
-    #define LCD_PINS_EN                       PIN3_14  // SID (MOSI)
-    #define LCD_PINS_D4                       PIN3_30  // SCK (CLK) clock
+    #define LCD_PINS_RS                       P3_06  // CS chip select /SS chip slave select
+    #define LCD_PINS_EN                       P3_14  // SID (MOSI)
+    #define LCD_PINS_D4                       P3_30  // SCK (CLK) clock
 
   #elif ALL(IS_NEWPANEL, PANEL_ONE)
 
@@ -383,14 +383,14 @@
         #define DOGLCD_SCK                    23
         #define DOGLCD_A0            LCD_PINS_DC
       #else
-        #define LCD_PINS_RS                   PIN3_06
-        #define LCD_PINS_EN                   PIN3_14
-        #define LCD_PINS_D4                   PIN3_30
-        #define LCD_PINS_D5                   PIN3_05
-        #define LCD_PINS_D6                   PIN3_29
+        #define LCD_PINS_RS                   P3_06
+        #define LCD_PINS_EN                   P3_14
+        #define LCD_PINS_D4                   P3_30
+        #define LCD_PINS_D5                   P3_05
+        #define LCD_PINS_D6                   P3_29
       #endif
 
-      #define LCD_PINS_D7                     PIN5_00
+      #define LCD_PINS_D7                     P5_00
 
       #if !IS_NEWPANEL
         #define BEEPER_PIN                    33
@@ -416,18 +416,18 @@
 
     #if ENABLED(REPRAP_DISCOUNT_SMART_CONTROLLER)
 
-      #define BEEPER_PIN                      PIN3_31
+      #define BEEPER_PIN                      P3_31
 
       #if ENABLED(CR10_STOCKDISPLAY)
         #define BTN_EN1                       17
         #define BTN_EN2                       23
       #else
-        #define BTN_EN1                       PIN3_11
-        #define BTN_EN2                       PIN3_12
+        #define BTN_EN1                       P3_11
+        #define BTN_EN2                       P3_12
       #endif
 
-      #define BTN_ENC                         PIN3_28
-      #define SD_DETECT_PIN                   PIN3_02
+      #define BTN_ENC                         P3_28
+      #define SD_DETECT_PIN                   P3_02
       //#define KILL_PIN                        PIN_NC
 
       #if ENABLED(BQ_LCD_SMART_CONTROLLER)
@@ -539,7 +539,7 @@
     #else
 
       // Beeper on AUX-4
-      #define BEEPER_PIN                      PIN3_31
+      #define BEEPER_PIN                      P3_31
 
       // Buttons are directly attached to AUX-2
       #if IS_RRW_KEYPAD
@@ -554,10 +554,10 @@
         #define BTN_EN2                       63  // AUX2 PIN 4
         #define BTN_ENC                       49  // AUX3 PIN 7
       #else
-        #define BTN_EN1                       PIN3_11
-        #define BTN_EN2                       PIN3_12
-        #define BTN_ENC                       PIN3_28
-        #define SD_DETECT_PIN                 PIN3_02
+        #define BTN_EN1                       P3_11
+        #define BTN_EN2                       P3_12
+        #define BTN_ENC                       P3_28
+        #define SD_DETECT_PIN                 P3_02
       #endif
 
       #if ENABLED(G3D_PANEL)

@@ -37,16 +37,16 @@
 //#define SD_SS_PIN         P0_06
 /** external */
 #ifndef SD_SCK_PIN
-  #define SD_SCK_PIN        PIN0_15
+  #define SD_SCK_PIN        P0_15
 #endif
 #ifndef SD_MISO_PIN
-  #define SD_MISO_PIN       PIN0_17
+  #define SD_MISO_PIN       P0_17
 #endif
 #ifndef SD_MOSI_PIN
-  #define SD_MOSI_PIN       PIN0_18
+  #define SD_MOSI_PIN       P0_18
 #endif
 #ifndef SD_SS_PIN
-  #define SD_SS_PIN         PIN1_23
+  #define SD_SS_PIN         P1_23
 #endif
 #if !defined(SDSS) || SDSS == P_NC // gets defaulted in pins.h
   #undef SDSS
