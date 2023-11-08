@@ -83,6 +83,8 @@ class MarlinSerial : public HardwareSerial {
     size_t write(const uint8_t *buffer, size_t size) override { return uart_device.write((const char *)buffer, size); }
     using Print::write; // pull in write(str) and write(buf, size) from Print
     operator bool() override { return true; }
+
+    bool recv_callback(char value);
   private:
     MCUI::BufferedUARTC uart_device;
 };

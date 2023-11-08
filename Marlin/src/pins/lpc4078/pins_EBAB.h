@@ -21,30 +21,6 @@
  */
 #pragma once
 
-/**
- * Arduino Mega with RAMPS v1.4 (or v1.3) pin assignments
- *
- * Applies to the following boards:
- *
- *  RAMPS_14_EFB (Hotend, Fan, Bed)
- *  RAMPS_14_EEB (Hotend0, Hotend1, Bed)
- *  RAMPS_14_EFF (Hotend, Fan0, Fan1)
- *  RAMPS_14_EEF (Hotend0, Hotend1, Fan)
- *  RAMPS_14_SF  (Spindle, Controller Fan)
- *
- *  RAMPS_13_EFB (Hotend, Fan, Bed)
- *  RAMPS_13_EEB (Hotend0, Hotend1, Bed)
- *  RAMPS_13_EFF (Hotend, Fan0, Fan1)
- *  RAMPS_13_EEF (Hotend0, Hotend1, Fan)
- *  RAMPS_13_SF  (Spindle, Controller Fan)
- *
- *  Other pins_MYBOARD.h files may override these defaults
- *
- *  Differences between
- *  RAMPS_13 | RAMPS_14
- *         7 | 11
- */
-
 #ifndef BOARD_INFO_NAME
   #define BOARD_INFO_NAME "Extra Big Ass Board"
 #endif
@@ -54,6 +30,41 @@
 #endif
 
 #define LED_PIN                                P3_18 // PWM0_3
+
+// EXTRA PINS
+#define FIL_RUNOUT_PIN P1_12
+#define PS_ON_PIN P3_15
+
+// DRIVERS EXTRA PINS
+#define DRIVERS_SCK                            P1_20
+#define DRIVERS_MISO                           P1_23
+#define DRIVERS_MOSI                           P1_24
+
+#if HAS_TMC_UART
+
+  // #define X_SERIAL_TX_PIN                  P1_24
+  // #define X_SERIAL_RX_PIN                  P1_23
+
+  // #define Y_SERIAL_TX_PIN                  P1_24
+  // #define Y_SERIAL_RX_PIN                  P1_23
+
+  // #define Z_SERIAL_TX_PIN                  P1_24
+  // #define Z_SERIAL_RX_PIN                  P1_23
+
+  #define E0_SLAVE_ADDRESS 0
+  #define E0_SERIAL_TX_PIN                 P1_24
+  #define E0_SERIAL_RX_PIN                 P1_23
+
+  #define E1_SLAVE_ADDRESS 1
+  #define E1_SERIAL_TX_PIN                 P1_24
+  #define E1_SERIAL_RX_PIN                 P1_23
+
+  // Reduce baud rate to improve software serial reliability
+  #ifndef TMC_BAUD_RATE
+    #define TMC_BAUD_RATE                  19200
+  #endif
+
+#endif // HAS_TMC_UART
 
 //
 // Servos
@@ -443,7 +454,7 @@
 
       #define BTN_ENC                         P3_28
       #define SD_DETECT_PIN                   P3_02
-      //#define KILL_PIN                        PIN_NC
+      //#define KILL_PIN                        P_NC
 
       #if ENABLED(BQ_LCD_SMART_CONTROLLER)
         #define LCD_BACKLIGHT_PIN             39
