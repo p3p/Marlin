@@ -507,15 +507,15 @@
 #elif MB(BTT_SKR_E3_TURBO)
   #include "lpc1769/pins_BTT_SKR_E3_TURBO.h"        // LPC1769                              env:LPC1769
 #elif MB(FLY_CDY)
-  #include "lpc1769/pins_FLY_CDY.h"             // LPC1769                                env:LPC1769
+  #include "lpc1769/pins_FLY_CDY.h"                 // LPC1769                              env:LPC1769
 #elif MB(XTLW_CLIMBER_8TH_LPC)
   #include "lpc1769/pins_XTLW_CLIMBER_8TH_LPC.h"    // LPC1769                              env:LPC1769
 //
 // LPC4078 ARM Cortex M4
 //
 
-#elif MB(EBAB_TEST)
-  #include "lpc4078/pins_EBAB_TEST.h"           // LPC4078                               env:LPC4078
+#elif MB(EBAB)
+  #include "lpc4078/pins_EBAB.h"                    // LPC4078                               env:LPC4078
 
 
 //

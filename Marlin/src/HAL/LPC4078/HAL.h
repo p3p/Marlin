@@ -31,7 +31,6 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <algorithm>
-extern "C" volatile uint32_t _millis;
 
 #include "../shared/Marduino.h"
 #include "../shared/Delay.h"
@@ -107,8 +106,8 @@ extern DefaultSerial1 USBSerial;
 // Interrupts
 //
 
-#define CRITICAL_SECTION_START()  const bool irqon = !MCUCore::primask(); MCUCore::disable_irq()
-#define CRITICAL_SECTION_END()    if (irqon) MCUCore::enable_irq()
+#define CRITICAL_SECTION_START()  const bool irqon = !MCUCore::primask(); MCUCore::nvic_interrupts_disable()
+#define CRITICAL_SECTION_END()    if (irqon) MCUCore::nvic_interrupts_enable()
 
 //
 // ADC
@@ -200,9 +199,9 @@ public:
   static void reboot();        // Restart the firmware from 0x0
 
   // Interrupts
-  static bool isr_state() { return MCUCore::primask(); } //!__get_PRIMASK(); }
-  static void isr_on()  { MCUCore::enable_irq(); } //} __enable_irq();
-  static void isr_off() {  MCUCore::disable_irq(); } //}__disable_irq();
+  static bool isr_state() { return MCUCore::primask(); }
+  static void isr_on()  { MCUCore::nvic_interrupts_enable(); }
+  static void isr_off() {  MCUCore::nvic_interrupts_disable(); }
 
   static void delay_ms(const int ms) { DELAY_US(ms * 1000); }
 

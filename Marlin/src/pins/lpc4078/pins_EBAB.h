@@ -46,11 +46,11 @@
  */
 
 #ifndef BOARD_INFO_NAME
-  #define BOARD_INFO_NAME "TEST EBAB"
+  #define BOARD_INFO_NAME "Extra Big Ass Board"
 #endif
 
 #ifndef DEFAULT_MACHINE_NAME
-  #define DEFAULT_MACHINE_NAME "TEST EBAB"
+  #define DEFAULT_MACHINE_NAME "XtraBigAssBoard"
 #endif
 
 #define LED_PIN                                P3_18 // PWM0_3
@@ -187,7 +187,22 @@
 //
 // Misc. Functions
 //
-#define SDSS                                  P0_06
+#if SD_CONNECTION_IS(LCD)
+  #define SD_DETECT_PIN                       P3_02
+  #define SD_SCK_PIN                          P1_00
+  #define SD_MISO_PIN                         P1_04
+  #define SD_MOSI_PIN                         P1_01
+  #define SD_SS_PIN                           P3_03
+  #define SDSS                            SD_SS_PIN
+#elif SD_CONNECTION_IS(ONBOARD)
+  #define SD_DETECT_PIN                        P_NC
+  #define SD_SCK_PIN                          P0_07
+  #define SD_MISO_PIN                         P0_08
+  #define SD_MOSI_PIN                         P0_09
+  #define ONBOARD_SD_CS_PIN                   P0_06
+  #define SD_SS_PIN               ONBOARD_SD_CS_PIN
+  #define SDSS                            SD_SS_PIN
+#endif
 
 #ifndef NEOPIXEL_PIN
   #define NEOPIXEL_PIN                        P_NC
@@ -557,7 +572,6 @@
         #define BTN_EN1                       P3_11
         #define BTN_EN2                       P3_12
         #define BTN_ENC                       P3_28
-        #define SD_DETECT_PIN                 P3_02
       #endif
 
       #if ENABLED(G3D_PANEL)

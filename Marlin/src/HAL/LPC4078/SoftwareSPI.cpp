@@ -3,6 +3,8 @@
 #include <Arduino.h>
 #include "SoftwareSPI.h"
 
+#include <mcu_interface.h>
+
 uint8_t swSpiTransfer(uint8_t b, const uint8_t spi_speed, const pin_t sck_pin, const pin_t miso_pin, const pin_t mosi_pin) {
   for (uint8_t i = 0; i < 8; i++) {
     if (spi_speed == 0) {
