@@ -64,6 +64,15 @@ MarlinCDCSerial MCDCSerial0;
     return true;
   }
 
+  #include "../../feature/e_parser.h"
+
+  EmergencyParser::State emergency_state;
+
+  bool CDC_RecvCallback(const char c) {
+    emergency_parser.update(emergency_state, c);
+    return true;
+  }
+
 #endif
 
 #endif // TARGET_LPC4078
