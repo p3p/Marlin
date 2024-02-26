@@ -33,38 +33,12 @@
 
 // EXTRA PINS
 #define FIL_RUNOUT_PIN P1_12
-#define PS_ON_PIN P3_15
 
 // DRIVERS EXTRA PINS
 #define DRIVERS_SCK                            P1_20
 #define DRIVERS_MISO                           P1_23
 #define DRIVERS_MOSI                           P1_24
 
-#if HAS_TMC_UART
-
-  // #define X_SERIAL_TX_PIN                  P1_24
-  // #define X_SERIAL_RX_PIN                  P1_23
-
-  // #define Y_SERIAL_TX_PIN                  P1_24
-  // #define Y_SERIAL_RX_PIN                  P1_23
-
-  // #define Z_SERIAL_TX_PIN                  P1_24
-  // #define Z_SERIAL_RX_PIN                  P1_23
-
-  #define E0_SLAVE_ADDRESS 0
-  #define E0_SERIAL_TX_PIN                 P1_24
-  #define E0_SERIAL_RX_PIN                 P1_23
-
-  #define E1_SLAVE_ADDRESS 1
-  #define E1_SERIAL_TX_PIN                 P1_24
-  #define E1_SERIAL_RX_PIN                 P1_23
-
-  // Reduce baud rate to improve software serial reliability
-  #ifndef TMC_BAUD_RATE
-    #define TMC_BAUD_RATE                  19200
-  #endif
-
-#endif // HAS_TMC_UART
 
 //
 // Servos
@@ -167,6 +141,37 @@
 #define E8_CS_PIN                             P5_01
 #define E8_DIAG_PIN                           P2_31
 
+
+#if HAS_TMC_UART
+  #define X_SERIAL_TX_PIN  P0_00
+  #define X_SERIAL_RX_PIN  P0_00
+  #define Y_SERIAL_TX_PIN  P2_22
+  #define Y_SERIAL_RX_PIN  P2_22
+  #define Z_SERIAL_TX_PIN  P4_01
+  #define Z_SERIAL_RX_PIN  P4_01
+  #define E0_SERIAL_TX_PIN P4_00
+  #define E0_SERIAL_RX_PIN P4_00
+  #define E1_SERIAL_TX_PIN P1_18
+  #define E1_SERIAL_RX_PIN P1_18
+  #define E2_SERIAL_TX_PIN P3_24
+  #define E2_SERIAL_RX_PIN P3_24
+  #define E3_SERIAL_TX_PIN P4_21
+  #define E3_SERIAL_RX_PIN P4_21
+  #define E4_SERIAL_TX_PIN P2_12
+  #define E4_SERIAL_RX_PIN P2_12
+  #define E5_SERIAL_TX_PIN P4_16
+  #define E5_SERIAL_RX_PIN P4_16
+  #define E6_SERIAL_TX_PIN P0_27
+  #define E6_SERIAL_RX_PIN P0_27
+  #define E7_SERIAL_TX_PIN P2_29
+  #define E7_SERIAL_RX_PIN P2_29
+  #define E8_SERIAL_TX_PIN P5_01
+  #define E8_SERIAL_RX_PIN P5_01
+
+  // Reduce baud rate to improve software serial reliability
+  #define TMC_BAUD_RATE 19200
+#endif // HAS_TMC_UART
+
 //
 // Temperature Sensors
 //
@@ -228,7 +233,7 @@
 #endif
 
 #ifndef PS_ON_PIN
-  #define PS_ON_PIN                           P_NC
+  //#define PS_ON_PIN                           P_NC
 #endif
 
 //
@@ -250,14 +255,14 @@
  * Default pins for TMC software SPI
  */
 #if ENABLED(TMC_USE_SW_SPI)
-  #ifndef TMC_SW_MOSI
-    #define TMC_SW_MOSI                       P1_24
+  #ifndef TMC_SPI_MOSI
+    #define TMC_SPI_MOSI                       P1_24
   #endif
-  #ifndef TMC_SW_MISO
-    #define TMC_SW_MISO                       P1_23
+  #ifndef TMC_SPI_MISO
+    #define TMC_SPI_MISO                       P1_23
   #endif
-  #ifndef TMC_SW_SCK
-    #define TMC_SW_SCK                        P1_20
+  #ifndef TMC_SPI_SCK
+    #define TMC_SPI_SCK                        P1_20
   #endif
 #endif
 
