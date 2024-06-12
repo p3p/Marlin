@@ -66,7 +66,7 @@ class MarlinSerial : public HardwareSerial {
   public:
     MarlinSerial(const uint32_t uart_id) : uart_device(uart_id) {}
     void begin(unsigned long baudrate) override {
-      uart_device.configure_pins(P0_02, P0_03);
+      uart_device.configure_pins(P0_03, P0_02);
       uart_device.init({ .baud = baudrate });
       #if ENABLED(EMERGENCY_PARSER)
       uart_device.set_rx_callback([this](char rx_value){ return this->recv_callback(rx_value); } );
