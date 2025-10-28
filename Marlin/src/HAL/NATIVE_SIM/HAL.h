@@ -172,6 +172,9 @@ int freeMemory();
 
 #pragma GCC diagnostic pop
 
+void tone(const pin_t _pin, const unsigned int frequency, const unsigned long duration=0);
+void noTone(const pin_t _pin);
+
 // ------------------------
 // MarlinHAL Class
 // ------------------------

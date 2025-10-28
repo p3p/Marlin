@@ -50,6 +50,10 @@ typedef uint64_t hal_timer_t;
 #ifndef MF_TIMER_SYSTICK
   #define MF_TIMER_SYSTICK      2  // Timer Index for Systick
 #endif
+#ifndef MF_TIMER_TONE
+  #define MF_TIMER_TONE         3  // Timer Index for Tone Generation
+#endif
+
 #define SYSTICK_TIMER_FREQUENCY 1000
 
 #define TEMP_TIMER_RATE        1000000
@@ -63,6 +67,8 @@ typedef uint64_t hal_timer_t;
 #define PULSE_TIMER_PRESCALE   STEPPER_TIMER_PRESCALE
 #define PULSE_TIMER_TICKS_PER_US STEPPER_TIMER_TICKS_PER_US
 
+#define TONE_TIMER_RATE        STEPPER_TIMER_RATE
+
 #define ENABLE_STEPPER_DRIVER_INTERRUPT() HAL_timer_enable_interrupt(MF_TIMER_STEP)
 #define DISABLE_STEPPER_DRIVER_INTERRUPT() HAL_timer_disable_interrupt(MF_TIMER_STEP)
 #define STEPPER_ISR_ENABLED() HAL_timer_interrupt_enabled(MF_TIMER_STEP)
@@ -75,6 +81,9 @@ typedef uint64_t hal_timer_t;
 #endif
 #ifndef HAL_TEMP_TIMER_ISR
   #define HAL_TEMP_TIMER_ISR()  extern "C" void TIMER1_IRQHandler()
+#endif
+#ifndef HAL_TONE_TIMER_ISR
+  #define HAL_TONE_TIMER_ISR() extern "C" void TIMER3_IRQHandler()
 #endif
 
 void HAL_timer_init();
